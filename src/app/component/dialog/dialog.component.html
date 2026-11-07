@@ -1,0 +1,13 @@
+<mat-dialog-content class="text-center text-xl font-semibold mt-5">
+    <p class="whitespace-pre-line">{{data.question}}</p>
+</mat-dialog-content>
+
+<div class="justify-center flex mt-24">
+    <div><button *ngIf="data.noStr" mat-button mat-dialog-close
+            class="bg-white text-[#0d5cab] border-solid border-2 border-[#0d5cab] ml-auto h-10 w-40 mr-2"
+            (click)="no()">{{data.noStr}}</button></div>
+    <div><button *ngIf="data.yesStr" mat-button mat-dialog-close class="bg-[#0d5cab] text-white mr-auto h-10 w-40 ml-2"
+            (click)="yes()">{{data.yesStr}}</button></div>
+
+
+</div>

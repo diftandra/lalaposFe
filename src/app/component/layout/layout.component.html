@@ -1,0 +1,23 @@
+<nav *ngIf="isLoggedIn"
+    class="fixed top-0 left-0 w-screen h-[4.5rem] px-6 bg bg-gradient-to-r from-blue-500 to-blue-400 z-20 flex items-center">
+    <app-sidenav class="w-12 h-12 mr-10"></app-sidenav>
+
+    <a class="text-white mr-auto" href="home">
+
+    </a>
+
+    <div class="text-center" title>
+        <span class="font-normal text-lg text-white">Hello, </span>
+        <span class="font-semibold text-lg text-white">{{username}}</span>
+        <br />
+        <button class="font-semibold text-lg text-white" (click)="logout()">logout</button>
+    </div>
+</nav>
+
+<div class="">
+    <app-breadcrumb></app-breadcrumb>
+    <router-outlet></router-outlet>
+</div>
+<div class="fixed text-[#979797] text-[0.5rem] bottom-0 right-9">
+    {{ version }}
+</div>

@@ -1,0 +1,32 @@
+<div>
+    <form action="" [formGroup]="formGroup">
+        <div class="grid grid-cols-[30%,50%] justify-center">
+            <p class="self-center">Total Bon</p>
+            <mat-form-field appearance="outline" class="w-[90%]">
+                <mat-label>Total Bon</mat-label>
+                <input class="text-xl" matInput formControlName="totalBon" currencyMask>
+            </mat-form-field>
+            <p class="self-center">Pembayaran</p>
+            <mat-form-field appearance="outline" class="w-[90%]">
+                <mat-label>Pembayaran</mat-label>
+                <input class="font-bold" matInput formControlName="pembayaran" currencyMask>
+            </mat-form-field>
+            <p class="self-center">Kembalian</p>
+            <mat-form-field appearance="outline" class="w-[90%]">
+                <mat-label>Kembalian</mat-label>
+                <input class="text-xl" matInput formControlName="kembalian" currencyMask
+                    [options]="{allowNegative:true}">
+            </mat-form-field>
+        </div>
+        <div class="flex justify-between">
+            <button 
+                class=" bg-blue-200 text-xl  h-12 rounded text-white font-bold p-2 px-10"  (click)="onNoClick()"
+                >Kembali</button>
+            <button [disabled]="!formGroup.valid || this.formGroup.get('kembalian')?.value == undefined"
+                class=" bg-blue-300 text-xl  h-12 rounded text-white font-bold p-2 px-10"
+                (click)="cetak()">Cetak</button>
+                
+        </div>
+
+    </form>
+</div>

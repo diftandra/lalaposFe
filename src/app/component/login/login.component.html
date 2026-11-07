@@ -1,0 +1,32 @@
+<div class="grid grid-cols-[66%,34%]">
+    <div class="relative">
+        <img src="assets/Icon/istockphoto-1173257070-612x612.svg" class=" h-screen" alt="f">
+        <div class="absolute top-[30%] text-5xl text-white font-bold m-auto  right-[8%]">Welcome</div>
+    </div>
+
+    <div class=" h-min  m-auto top-0 bottom-0 p-10">
+
+        <div class="grid place-items-center">
+            <p class="text-2xl font-bold text-[#0D5CAB]">User Login</p>
+            <br>
+
+            <br>
+            <form id="form" [formGroup]="formGroup" class="grid justify-items-center">
+                <mat-form-field appearance="outline" class="w-96">
+                    <input matInput type="text" formControlName="username" class="" placeholder="username">
+                    <mat-error *ngIf="formGroup.get('username')?.invalid">required</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-96">
+                    <input matInput type="password" formControlName="password" class="" placeholder="password">
+                    <mat-error *ngIf="formGroup.get('password')?.invalid">required</mat-error>
+                </mat-form-field>
+                <p class="text-red-600" *ngIf="!auth">Username/Passowrd salah</p>
+                <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold "
+                    (click)="login()">Login</button>
+            </form>
+
+        </div>
+
+
+    </div>
+</div>

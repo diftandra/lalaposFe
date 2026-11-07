@@ -1,0 +1,107 @@
+<div class="px-8 pb-10">
+    <p class=" text-[#0D5CAB] font-bold text-2xl">Detail Order Barang</p>
+    <br>
+    <div class="grid grid-cols-[10%,40%] mb-3">
+        <p>Order Id</p>
+        <p class="font-semibold"> {{header.sales_header_code}}</p>
+        <p>Nama Pembeli</p>
+        <p class="font-semibold">{{header.customer_name}}</p>
+        <p>Tanggal Order</p>
+        <p class="font-semibold">{{header.order_date | date : 'yyyy MMMM dd hh:mm:ss'}}</p>
+        <p>Total</p>
+        <p class="font-semibold">Rp {{header.total|number}}</p>
+    </div>
+
+    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+        <ng-container matColumnDef="product_code">
+            <th *matHeaderCellDef mat-sort-header class="rounded-l-md">
+                Kode Barang
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{ element.product_code }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="product_brand_code">
+            <th *matHeaderCellDef mat-sort-header>Merk</th>
+            <td mat-cell *matCellDef="let element">
+                {{ element.product_brand_code }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="product_desc">
+            <th *matHeaderCellDef mat-sort-header>Deskripsi</th>
+            <td mat-cell *matCellDef="let element">{{
+                element.product_desc
+                }}</td>
+        </ng-container>
+        <ng-container matColumnDef="unit_amount">
+            <th *matHeaderCellDef mat-sort-header>Packing</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.unit_amount}}
+            </td>
+        </ng-container>
+        <ng-container matColumnDef="product_amount">
+            <th *matHeaderCellDef mat-sort-header arrowPosition="before">Jumlah</th>
+            <td mat-cell *matCellDef="let element" class="text-right">
+                {{ element.product_amount |number
+                }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="discount">
+            <th *matHeaderCellDef mat-sort-header arrowPosition="before">Diskon</th>
+            <td mat-cell *matCellDef="let element" class="text-right">
+                {{ element.discount |number
+                }}
+            </td>
+        </ng-container>
+        <ng-container matColumnDef="total">
+            <th *matHeaderCellDef mat-sort-header arrowPosition="before">Total</th>
+            <td mat-cell *matCellDef="let element" class="text-right">
+                {{ element.total |number
+                }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actn">
+            <th *matHeaderCellDef mat-sort-header class="rounded-r-md"></th>
+            <td id="editC" mat-cell *matCellDef="let element">
+                <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="18" r="2" transform="rotate(-180 12 18)" fill="#C4C4C4" />
+                        <circle cx="12" cy="12" r="2" transform="rotate(-180 12 12)" fill="#C4C4C4" />
+                        <circle cx="12" cy="6" r="2" transform="rotate(-180 12 6)" fill="#C4C4C4" />
+                    </svg>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item class="hover:font-bold"
+                        (click)="edit(header.sales_header_code,  element.product_code)">
+                        <span>Edit</span>
+                    </button>
+                    <button mat-menu-item class="hover:font-bold"
+                        (click)="delete(header.sales_header_code, element.sales_detail_code)">
+                        <span>Delete</span>
+                    </button>
+                </mat-menu>
+            </td>
+        </ng-container>
+
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-[#F0EFEF] border-b-0 h-14"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:cursor-pointer hover:bg-[#F4F9FF]">
+        </tr>
+    </table>
+
+    <table>
+        <tr *ngIf="dataSource.filteredData.length == 0">
+            <td class="text-center py-4" [attr.colspan]="displayedColumns.length">
+                Data Tidak Ditemukan
+            </td>
+        </tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[10,25,50, 100, ]" showFirstLastButtons
+        aria-label="Select page of periodic elements">
+    </mat-paginator>
+
+</div>

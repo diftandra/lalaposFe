@@ -1,0 +1,25 @@
+<div class="flex items-center mb-[26px] pt-[100px] px-8" *ngIf="breadcrumbs.length != 0">
+    <span class="flex items-center mr-3">
+        <a class="link mr-3 hover:underline" href="home">Home</a>
+        <svg width="9" height="12" viewBox="0 0 9 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.11211 0L0.589844 1.41L5.53451 6L0.589844 10.59L2.11211 12L8.58984 6L2.11211 0Z"
+                fill="#005CAB" />
+        </svg>
+    </span>
+
+    <div *ngFor="let breadcrumb of breadcrumbs; let i = index">
+        <span class="flex items-center link mr-3" *ngIf="i != breadcrumbs.length - 1">
+            <a class="link mr-3 hover:underline" [routerLink]="[breadcrumb.url]" [queryParams]="breadcrumb.param">
+                {{ breadcrumb.name }}
+            </a>
+            <svg width="9" height="12" viewBox="0 0 9 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.11211 0L0.589844 1.41L5.53451 6L0.589844 10.59L2.11211 12L8.58984 6L2.11211 0Z"
+                    fill="#005CAB" />
+            </svg>
+        </span>
+
+        <span [hidden]="i != breadcrumbs.length - 1">
+            <span class="end">{{ breadcrumb.name }}</span>
+        </span>
+    </div>
+</div>

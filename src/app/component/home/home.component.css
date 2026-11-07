@@ -1,0 +1,24 @@
+table {
+    width: 100%;
+}
+
+th {
+    color: #65748b;
+    background-color: aliceblue;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+td {
+    color: #333333;
+    font-size: 14px;
+    font-weight: 400;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+::ng-deep .mat-sort-header-container {
+    display: flex;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
