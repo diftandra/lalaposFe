@@ -1,54 +1,52 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">{{titel}} Supplier</p>
-    <br>
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">{{ titel }} User</h1>
 
+    <div class="card bg-base-100 shadow-md max-w-3xl">
+        <div class="card-body p-5 sm:p-7">
+            <form [formGroup]="formGroup" class="grid grid-cols-1 sm:grid-cols-[180px,1fr] gap-x-4 gap-y-1 items-center">
+                <label class="text-sm font-medium text-base-content/80">Tanggal / Jam</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Tanggal/Jam</mat-label>
+                    <input matInput formControlName="created_date">
+                </mat-form-field>
 
-    <form action="" [formGroup]="formGroup">
-        <div class="grid grid-cols-[20%,20%]">
-            <p class="self-center">Tanggal/Jam</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Tanggal/Jam</mat-label>
-                <input matInput formControlName="created_date">
-            </mat-form-field>
-            <p class="self-center">UserName</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>UserName</mat-label>
-                <input matInput formControlName="username">
-            </mat-form-field>
-            <p class="self-center">Full Name </p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Full Name </mat-label>
-                <input matInput formControlName="full_name">
-            </mat-form-field>
-            <p class="self-center">Password</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Password</mat-label>
-                <input matInput formControlName="password" type="password">
-            </mat-form-field>
+                <label class="text-sm font-medium text-base-content/80">Username</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Username</mat-label>
+                    <input matInput formControlName="username">
+                </mat-form-field>
 
-            <p class="self-center">Role</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Role</mat-label>
-                <mat-select formControlName="role">
-                    <mat-option *ngFor="let role of listRole" [value]="role.role_group_code"> {{role.role_group_code}}
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
+                <label class="text-sm font-medium text-base-content/80">Nama Lengkap</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Nama Lengkap</mat-label>
+                    <input matInput formControlName="full_name">
+                </mat-form-field>
 
-            <p class="self-center">Active</p>
+                <label class="text-sm font-medium text-base-content/80">Password</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Password</mat-label>
+                    <input matInput formControlName="password" type="password">
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Role</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Role</mat-label>
+                    <mat-select formControlName="role">
+                        <mat-option *ngFor="let role of listRole" [value]="role.role_group_code">{{ role.role_group_code }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
 
-            <mat-radio-group [ngModelOptions]="{standalone: true}" aria-label="Select an option"
-                (change)="setDataRadio($event)" [(ngModel)]="data.is_active">
-                <mat-radio-button [value]="true" class="mx-2">Aktif</mat-radio-button>
-                <mat-radio-button [value]="false">Non-Aktif</mat-radio-button>
-            </mat-radio-group>
+                <label class="text-sm font-medium text-base-content/80">Status</label>
+                <mat-radio-group [ngModelOptions]="{standalone: true}" aria-label="Status"
+                    (change)="setDataRadio($event)" [(ngModel)]="data.is_active" class="flex gap-4 py-2">
+                    <mat-radio-button [value]="true">Aktif</mat-radio-button>
+                    <mat-radio-button [value]="false">Non-Aktif</mat-radio-button>
+                </mat-radio-group>
+            </form>
+
+            <div class="card-actions justify-end mt-4">
+                <button [disabled]="disabel" (click)="simpan()" class="btn btn-primary px-10">Kirim</button>
+            </div>
         </div>
-
-    </form>
-
-
-    <button [disabled]="disabel" (click)="simpan()" [ngClass]="{'bg-blue-300':true}"
-        class=" absolute bottom-10 right-5 w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Kirim</button>
-
+    </div>
 </div>

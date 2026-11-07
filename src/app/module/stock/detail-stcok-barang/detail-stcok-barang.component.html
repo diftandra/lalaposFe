@@ -1,9 +1,8 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">Input Stock Barang</p>
-    <br>
-    <div class="grid grid-cols-[25%,75%]">
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">Input Stok Barang</h1>
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,28%),minmax(0,72%)] gap-5">
 
-        <div>
+        <div class="card bg-base-100 shadow-md"><div class="card-body p-5">
             <form action="" [formGroup]="formGroup">
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Merek</mat-label>
@@ -35,10 +34,8 @@
 
             <div class="relative">
                 <button [disabled]="!btnAddDetail(data.detailStock.length -1)"
-                    [ngClass]="{'bg-[#C4C4C4]':!btnAddDetail(data.detailStock.length -1),'bg-blue-300':btnAddDetail(data.detailStock.length -1)}"
-                    class="absolute -bottom-10 w-[90%] bg-blue-300 h-12 rounded text-white font-bold"
-                    (click)="addDetail()">Add
-                    Unit</button>
+                    class="btn btn-outline btn-primary btn-sm w-full mb-4"
+                    (click)="addDetail()">+ Add Unit</button>
                 <div *ngFor="let detail of data.detailStock;  let idx = index" class="grid grid-cols-[20%,20%,20%,33%]">
                     <mat-form-field appearance="outline" class="w-[90%]">
                         <mat-label>Packing*</mat-label>
@@ -96,13 +93,13 @@
                 </mat-form-field>
             </form>
 
-            <button *ngIf="btnSimpan()" [ngClass]="{'bg-[#C4C4C4]':!formGroup.valid,'bg-blue-300':formGroup.valid}"
-                [disabled]="!formGroup.valid" class=" w-[90%]  h-12 rounded text-white font-bold"
-                (click)="simpan()">Simpan</button>
-        </div>
+            <button *ngIf="btnSimpan()" [disabled]="!formGroup.valid"
+                class="btn btn-primary w-full mt-2" (click)="simpan()">Simpan</button>
+        </div></div>
 
-        <div>
-            <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+        <div class="card bg-base-100 shadow-md"><div class="card-body p-4 sm:p-5">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows class="w-full">
                 <ng-container matColumnDef="merk">
                     <th *matHeaderCellDef mat-sort-header class="rounded-l-md">
                         Merk
@@ -183,40 +180,33 @@
                     </td>
                 </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-[#F0EFEF] border-b-0 h-14"></tr>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-base-200 h-12"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns"
-                    class="hover:cursor-pointer hover:bg-[#F4F9FF]"></tr>
+                    class="hover:bg-base-200/60 cursor-pointer transition-colors"></tr>
             </table>
 
-            <table>
-                <tr *ngIf="dataSource.filteredData.length == 0">
-                    <td class="text-center py-4" [attr.colspan]="displayedColumns.length">
-                        Data Tidak Ditemukan
-                    </td>
-                </tr>
-            </table>
-            <mat-paginator [pageSizeOptions]="[10,25,50, 100, ]" showFirstLastButtons
-                aria-label="Select page of periodic elements">
+            <div *ngIf="dataSource.filteredData.length == 0" class="text-center py-8 text-base-content/50">
+                Data tidak ditemukan
+            </div>
+          </div>
+            <mat-paginator [pageSizeOptions]="[10,25,50,100]" showFirstLastButtons
+                aria-label="Pilih halaman">
             </mat-paginator>
-            <div class="flex justify-between mt-8">
-                <div class="relative" *ngIf="!id && !uploadManual">
+            <div class="flex flex-wrap justify-between gap-3 mt-6">
+                <div *ngIf="!id && !uploadManual">
                     <input #myInput type="file" name="file" id="file" accept=".csv"
-                        class="inputfile w-60 h-12 items-center hidden" (change)="uploadFile($event)" />
-                    <label
-                        class="hover:cursor-pointer bg-[#1BAAE2] w-60 h-12 text-center content-center p-3 text-white font-bold text-[18] border rounded"
-                        for="file">Upload Stock</label>
+                        class="hidden" (change)="uploadFile($event)" />
+                    <label class="btn btn-info text-info-content" for="file">Upload Stock (CSV)</label>
                 </div>
-
                 <button [disabled]="dataTable.length <= 0 || disabelBtn" (click)="kirim()"
-                    [ngClass]="{'bg-[#C4C4C4]':dataTable.length <= 0,'bg-blue-300':dataTable.length > 0}"
-                    class=" w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Kirim</button>
+                    class="btn btn-primary px-10 ml-auto">Kirim</button>
             </div>
 
-        </div>
+        </div></div>
 
     </div>
 
 </div>
-<div *ngIf="loading" class="fixed top-0 left-0 z-10 bg-black/50 w-screen h-screen flex items-center justify-center">
-    <img class="animate-spin w-28 h-28" src="assets/Icon/Loading.svg" alt="Loading icon" />
+<div *ngIf="loading" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+    <span class="loading loading-spinner loading-lg text-primary w-20 h-20"></span>
 </div>

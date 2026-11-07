@@ -1,22 +1,28 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">Report Stock</p>
-    <br>
-    <div>
-        <form action="" [formGroup]=" formGroup" class="relative ">
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">Report Stock</h1>
 
-            <mat-form-field appearance="outline" class="w-[10%] p-2 ">
-                <mat-label>Tanggal Mulai</mat-label>
-                <input matInput formControlName="sDate" type="date" (ngModelChange)="dateChange()">
-
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="w-[10%] p-2">
-                <mat-label>Tanggal Akhir</mat-label>
-                <input matInput formControlName="eDate" type="date" (ngModelChange)="dateChange()">
-
-            </mat-form-field>
-        </form>
-    </div>
-    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body p-4 sm:p-5">
+        <div class="flex flex-wrap items-end gap-3 mb-2">
+            <form [formGroup]="formGroup" class="flex flex-wrap items-end gap-3 flex-1">
+                <mat-form-field appearance="outline" class="w-44">
+                    <mat-label>Tanggal Mulai</mat-label>
+                    <input matInput formControlName="sDate" type="date" (ngModelChange)="dateChange()">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-44">
+                    <mat-label>Tanggal Akhir</mat-label>
+                    <input matInput formControlName="eDate" type="date" (ngModelChange)="dateChange()">
+                </mat-form-field>
+            </form>
+            <button class="btn btn-primary gap-2 mb-5" (click)="downloadReport()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+            </button>
+        </div>
+      <div class="overflow-x-auto">
+    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows class="w-full">
         <ng-container matColumnDef="base_price">
             <th *matHeaderCellDef mat-sort-header arrowPosition="before">
                 Harga Beli
@@ -98,13 +104,14 @@
         </ng-container>
 
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-[#F0EFEF] border-b-0 h-14"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:cursor-pointer hover:bg-[#F4F9FF]">
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-base-200 h-12"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:bg-base-200/60 cursor-pointer transition-colors">
         </tr>
     </table>
-    <mat-paginator [length]="length" [pageSizeOptions]="[10,25,50 ]" showFirstLastButtons
-        aria-label="Select page of periodic elements">
+      </div>
+    <mat-paginator [length]="length" [pageSizeOptions]="[10,25,50]" showFirstLastButtons
+        aria-label="Pilih halaman">
     </mat-paginator>
-    <button class=" w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold"
-        (click)="downloadReport()">Download</button>
+      </div>
+    </div>
 </div>

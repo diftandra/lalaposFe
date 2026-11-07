@@ -1,51 +1,49 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">{{titel}} Supplier</p>
-    <br>
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">{{ titel }} Supplier</h1>
 
+    <div class="card bg-base-100 shadow-md max-w-3xl">
+        <div class="card-body p-5 sm:p-7">
+            <form [formGroup]="formGroup" class="grid grid-cols-1 sm:grid-cols-[180px,1fr] gap-x-4 gap-y-1 items-center">
+                <label class="text-sm font-medium text-base-content/80">Tanggal / Jam</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Tanggal/Jam</mat-label>
+                    <input matInput formControlName="created_date">
+                </mat-form-field>
 
-    <form action="" [formGroup]="formGroup">
-        <div class="grid grid-cols-[20%,20%]">
-            <p class="self-center">Tanggal/Jam</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Tanggal/Jam</mat-label>
-                <input matInput formControlName="created_date">
-            </mat-form-field>
-            <p class="self-center">Code Supplier</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Code Supplier</mat-label>
-                <input matInput formControlName="supplierCode">
-            </mat-form-field>
-            <p class="self-center">Nama Supplier</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Nama Supplier</mat-label>
-                <input matInput formControlName="supplierName">
-            </mat-form-field>
-            <p class="self-center">Kontak Supplier</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Kontak Merk</mat-label>
-                <input matInput formControlName="supplierContact">
-            </mat-form-field>
-            <p class="self-center">Alamat Supplier</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Alamat Supplier</mat-label>
-                <textarea matInput formControlName="supplierAddress"></textarea>
-            </mat-form-field>
-            <p class="self-center">Keterangan</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Keterangan</mat-label>
-                <textarea matInput formControlName="supplierNotes"></textarea>
-            </mat-form-field>
+                <label class="text-sm font-medium text-base-content/80">Kode Supplier</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Kode Supplier</mat-label>
+                    <input matInput formControlName="supplierCode">
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Nama Supplier</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Nama Supplier</mat-label>
+                    <input matInput formControlName="supplierName">
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Kontak Supplier</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Kontak Supplier</mat-label>
+                    <input matInput formControlName="supplierContact">
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Alamat Supplier</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Alamat Supplier</mat-label>
+                    <textarea matInput formControlName="supplierAddress"></textarea>
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Keterangan</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Keterangan</mat-label>
+                    <textarea matInput formControlName="supplierNotes"></textarea>
+                </mat-form-field>
+            </form>
 
+            <div class="card-actions justify-end mt-4">
+                <button [disabled]="disabel" (click)="simpan()" class="btn btn-primary px-10">Kirim</button>
+            </div>
         </div>
-
-    </form>
-
-
-    <button [disabled]="disabel" (click)="simpan()" [ngClass]="{'bg-blue-300':true}"
-        class=" absolute bottom-10 right-5 w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Kirim</button>
-
+    </div>
 </div>

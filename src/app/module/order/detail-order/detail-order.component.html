@@ -1,9 +1,8 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">Input Order Barang</p>
-    <br>
-    <div class="grid grid-cols-[25%,75%]">
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">Input Order Barang</h1>
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,28%),minmax(0,72%)] gap-5">
 
-        <div>
+        <div class="card bg-base-100 shadow-md"><div class="card-body p-5">
             <form action="" [formGroup]="formGroup">
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Tanggal Jam</mat-label>
@@ -74,18 +73,21 @@
                     <input matInput formControlName="discount" currencyMask type="text">
                 </mat-form-field>
 
-                <div class="pb-4 px-1">
-                    Sub Total : Rp {{getSubTotal() | number}}
+                <div class="alert bg-base-200 mb-3 py-2">
+                    <span class="text-sm">Sub Total</span>
+                    <span class="font-bold ml-auto">Rp {{ getSubTotal() | number }}</span>
                 </div>
-                <button [ngClass]="{'bg-[#C4C4C4]':!formGroup.valid,'bg-blue-300':formGroup.valid}"
-                    [disabled]="!formGroup.valid" class=" w-[90%]  h-12 rounded text-white font-bold"
-                    (click)="simpan()">Simpan</button>
+                <button [disabled]="!formGroup.valid" class="btn btn-primary w-full" (click)="simpan()">Simpan</button>
             </form>
 
-        </div>
-        <div>
-            <p class="text-3xl font-bold text-right">Total Bon : {{getGrandTotal() |number}} </p>
-            <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+        </div></div>
+        <div class="card bg-base-100 shadow-md"><div class="card-body p-4 sm:p-5">
+            <div class="flex items-center justify-end mb-2">
+                <span class="text-base-content/60 mr-2">Total Bon :</span>
+                <span class="text-2xl font-bold text-primary">Rp {{ getGrandTotal() | number }}</span>
+            </div>
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows class="w-full">
                 <ng-container matColumnDef="idx">
                     <th *matHeaderCellDef mat-sort-header class="rounded-l-md">
 
@@ -168,27 +170,23 @@
                 </ng-container>
 
 
-                <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-[#F0EFEF] border-b-0 h-14"></tr>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-base-200 h-12"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns"
-                    class="hover:cursor-pointer hover:bg-[#F4F9FF]"></tr>
+                    class="hover:bg-base-200/60 cursor-pointer transition-colors"></tr>
             </table>
 
-            <table>
-                <tr *ngIf="dataSource.filteredData.length == 0">
-                    <td class="text-center py-4" [attr.colspan]="displayedColumns.length">
-                        Data Tidak Ditemukan
-                    </td>
-                </tr>
-            </table>
-
-            <mat-paginator [pageSizeOptions]="[10,25,50, 100, ]" showFirstLastButtons
-                aria-label="Select page of periodic elements">
-            </mat-paginator>
-            <div class="justify-end flex">
-                <button [disabled]="dataTable.length <= 0 || disabelBtn" (click)="kirim()"
-                    [ngClass]="{'bg-[#C4C4C4]':dataTable.length <= 0,'bg-blue-300':dataTable.length > 0}"
-                    class=" w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Kirim</button>
+            <div *ngIf="dataSource.filteredData.length == 0" class="text-center py-8 text-base-content/50">
+                Data tidak ditemukan
             </div>
-        </div>
+          </div>
+
+            <mat-paginator [pageSizeOptions]="[10,25,50,100]" showFirstLastButtons
+                aria-label="Pilih halaman">
+            </mat-paginator>
+            <div class="flex justify-end mt-4">
+                <button [disabled]="dataTable.length <= 0 || disabelBtn" (click)="kirim()"
+                    class="btn btn-primary px-10">Kirim</button>
+            </div>
+        </div></div>
     </div>
 </div>

@@ -1,13 +1,16 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">Daftar Laporan</p>
-    <br>
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">Daftar Laporan</h1>
 
-    <div class="flex gap-10">
-        <span *ngFor="let data of listReport"
-            class="w-40 h-40 rounded bg-slate-200 flex p-2 justify-center items-center hover:cursor-pointer"
-            (click)="click(data.value)">
-            <p class="text-[#0D5CAB] text-xl font-semibold">{{data.key}}</p>
-        </span>
+    <div class="flex flex-wrap gap-5">
+        <button *ngFor="let data of listReport" (click)="click(data.value)"
+            class="card w-44 h-40 bg-base-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all border-t-4 border-primary">
+            <div class="card-body items-center justify-center text-center p-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9 17v-6h2v6H9zm4 0V7h2v10h-2zM5 17v-2h2v2H5zM3 3h18a1 1 0 011 1v16a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1z" />
+                </svg>
+                <p class="text-primary text-base font-semibold">{{ data.key }}</p>
+            </div>
+        </button>
     </div>
-
 </div>

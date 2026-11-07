@@ -1,40 +1,38 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">{{titel}} Merk</p>
-    <br>
+<div class="px-4 sm:px-8 pb-10">
+    <h1 class="text-2xl font-bold text-base-content mb-5">{{ titel }} Merk</h1>
 
+    <div class="card bg-base-100 shadow-md max-w-3xl">
+        <div class="card-body p-5 sm:p-7">
+            <form [formGroup]="formGroup" class="grid grid-cols-1 sm:grid-cols-[180px,1fr] gap-x-4 gap-y-1 items-center">
+                <label class="text-sm font-medium text-base-content/80">Tanggal / Jam</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Tanggal/Jam</mat-label>
+                    <input matInput formControlName="created_date">
+                </mat-form-field>
 
-    <form action="" [formGroup]="formGroup">
-        <div class="grid grid-cols-[20%,20%]">
-            <p class="self-center">Tanggal/Jam</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Tanggal/Jam</mat-label>
-                <input matInput formControlName="created_date">
-            </mat-form-field>
-            <p class="self-center">Code Merk</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Nama Merk</mat-label>
-                <input matInput formControlName="brandCode">
-            </mat-form-field>
-            <p class="self-center">Nama Merk</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Nama Merk</mat-label>
-                <input matInput formControlName="brandName">
-            </mat-form-field>
-            <p class="self-center">Status</p>
+                <label class="text-sm font-medium text-base-content/80">Kode Merk</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Kode Merk</mat-label>
+                    <input matInput formControlName="brandCode">
+                </mat-form-field>
 
+                <label class="text-sm font-medium text-base-content/80">Nama Merk</label>
+                <mat-form-field appearance="outline">
+                    <mat-label>Nama Merk</mat-label>
+                    <input matInput formControlName="brandName">
+                </mat-form-field>
 
-            <mat-radio-group aria-label="Select an option" (change)="setDataRadio($event)" [(ngModel)]="data.isActive"
-                [ngModelOptions]="{standalone: true}">
-                <mat-radio-button [value]="true" class="mx-2">Aktif</mat-radio-button>
-                <mat-radio-button [value]="false">Non-Aktif</mat-radio-button>
-            </mat-radio-group>
+                <label class="text-sm font-medium text-base-content/80">Status</label>
+                <mat-radio-group aria-label="Status" (change)="setDataRadio($event)" [(ngModel)]="data.isActive"
+                    [ngModelOptions]="{standalone: true}" class="flex gap-4 py-2">
+                    <mat-radio-button [value]="true">Aktif</mat-radio-button>
+                    <mat-radio-button [value]="false">Non-Aktif</mat-radio-button>
+                </mat-radio-group>
+            </form>
 
+            <div class="card-actions justify-end mt-4">
+                <button [disabled]="disabel" (click)="simpan()" class="btn btn-primary px-10">Kirim</button>
+            </div>
         </div>
-
-    </form>
-
-
-    <button [disabled]="disabel" (click)="simpan()" [ngClass]="{'bg-blue-300':true}"
-        class=" absolute bottom-10 right-5 w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Kirim</button>
-
+    </div>
 </div>
