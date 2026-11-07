@@ -20,7 +20,7 @@
                     <input matInput type="password" formControlName="password" class="" placeholder="password">
                     <mat-error *ngIf="formGroup.get('password')?.invalid">required</mat-error>
                 </mat-form-field>
-                <p class="text-red-600" *ngIf="!auth">Username/Passowrd salah</p>
+                <p class="text-red-600" *ngIf="!auth">Username/Password salah</p>
                 <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold "
                     (click)="login()">Login</button>
             </form>
