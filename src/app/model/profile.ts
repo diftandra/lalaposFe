@@ -29,5 +29,6 @@ export type Role = {
 export type Login = {
     full_name: string,
     role_group_code: string,
-    username: string
+    username: string,
+    token?: string
 }

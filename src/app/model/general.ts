@@ -34,6 +34,7 @@ export const ENC_KEY = "TOLE12345";
 export const sessionStorage_username_key = "un";
 export const sessionStorage_password_key = "sp";
 export const sessionStorage_menu_key = "t1e8913";
+export const sessionStorage_token_key = "tk";
 export const MASTER_DATA_HEADER_CODE_MH_01 = "MH001"
 export const MASTER_DATA_HEADER_CODE_MH_02 = "MH002"
 export type pairValue = {

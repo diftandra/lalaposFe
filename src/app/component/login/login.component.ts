@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { ENC_KEY, sessionStorage_menu_key, sessionStorage_password_key, sessionStorage_username_key } from 'src/app/model/general';
+import { ENC_KEY, sessionStorage_menu_key, sessionStorage_password_key, sessionStorage_token_key, sessionStorage_username_key } from 'src/app/model/general';
 import { AuthService } from 'src/app/service/auth.service';
 import { RestService } from 'src/app/service/rest/rest.service';
 import * as crypto from 'crypto-js';
@@ -30,6 +30,9 @@ export class LoginComponent {
 
 
           if (respond != null) {
+            if (respond.token) {
+              sessionStorage.setItem(sessionStorage_token_key, respond.token);
+            }
             let username = respond.username
             this.getMenu(username, respond.role_group_code);
           }
