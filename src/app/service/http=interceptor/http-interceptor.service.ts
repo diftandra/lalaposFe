@@ -10,28 +10,37 @@ import { sessionStorage_token_key } from 'src/app/model/general';
 export class HttpInterceptorService implements HttpInterceptor {
 
   constructor() { }
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-    // Attach the bearer token (set at login) to every outgoing request.
+    // Login endpoints are public and must NOT carry a (possibly stale) token,
+    // otherwise an expired token could interfere with logging back in.
+    const isAuthEndpoint = req.url.includes('/lala-pos/login');
+
     const token = sessionStorage.getItem(sessionStorage_token_key);
-    const authReq = token
+    const authReq = (token && !isAuthEndpoint)
       ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
       : req;
 
     return next.handle(authReq).pipe(timeout(60000), catchError((error: HttpErrorResponse) => {
 
-      // Session expired or not authenticated: clear it and send the user to login.
-      if (error.status === 401) {
+      // Session expired / not authenticated on a protected call: clear the
+      // session and bounce to login. Never do this for the login call itself
+      // (a failed login is handled by the login component), and avoid a loop.
+      if (error.status === 401 && !isAuthEndpoint) {
         sessionStorage.clear();
-        if (location.pathname !== '/login') {
-          location.href = '/login';
+        if (!location.pathname.endsWith('/login')) {
+          location.href = 'login';
         }
         return throwError(error);
       }
 
-      alert((error.error?.path ?? req.url) + ' : ' + (error.error?.error ?? error.message));
+      // Only surface non-auth errors, and read the message defensively.
+      const path = (error.error && error.error.path) ? error.error.path : req.url;
+      const message = (error.error && error.error.error) ? error.error.error : error.message;
+      alert(path + ' : ' + message);
       return throwError(error);
-    }))
+    }));
   }
 
 }

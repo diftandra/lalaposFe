@@ -24,6 +24,9 @@ export class LoginComponent {
   constructor(private router: Router, private authS: AuthService, private rest: RestService) { }
   login() {
     if (this.formGroup.valid) {
+      // Clear any leftover session (e.g. an expired token) before a fresh login.
+      sessionStorage.clear();
+      this.auth = true;
       this.rest.login(this.formGroup.get('username')?.value, this.formGroup.get('password')!.value!.trim()).subscribe(event => {
         if (event.type == HttpEventType.Response && event.ok && event.body) {
           let respond: Login = Object(event.body)['output_schema'];
