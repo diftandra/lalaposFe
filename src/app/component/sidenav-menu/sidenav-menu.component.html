@@ -1,55 +1,49 @@
-<div *ngFor="let menu of menus">
+<nav class="px-2 space-y-1">
+  <div *ngFor="let menu of menus">
     <button *ngIf="menu.authCode === undefined || authCode.includes(menu.authCode)"
-        (click)="onMenuclick(menu, menu.name, '', '')"
-        class="relative flex items-center px-3 h-12 w-full text-white hover:bg-[#C4C4C4]/20 active:bg-[#C4C4C4]/30"
-        [ngClass]="{ 'bg-[#C4C4C4]/30': menu.name === selectedMenu }">
-        <div *ngIf="menu.name === selectedMenu" class="absolute left-0 h-full w-1 bg-yellow-400"></div>
-
-        <!-- <img src="{{ menu.icon }}" alt="menu icon" class="h-6 w-6" /> -->
-        <p class="ml-3">{{ menu.name }}</p>
-
-        <svg *ngIf="menu.type === 'submenu'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-auto"
-            viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd" />
-        </svg>
+      (click)="onMenuclick(menu, menu.name, '', '')"
+      class="relative flex items-center gap-3 rounded-lg px-3 h-11 w-full text-left text-sm font-medium transition-colors hover:bg-white/10"
+      [ngClass]="{ 'bg-white/15': menu.name === selectedMenu }">
+      <span *ngIf="menu.name === selectedMenu" class="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-warning"></span>
+      <span class="flex-1">{{ menu.name }}</span>
+      <svg *ngIf="menu.type === 'submenu'" xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4 transition-transform" [class.rotate-90]="menu.openSubmenu"
+        viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd"
+          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+          clip-rule="evenodd" />
+      </svg>
     </button>
 
-    <ul *ngIf="menu.type === 'submenu'" [ngClass]="{ 'h-0': !menu.openSubmenu }"
-        class="w-full overflow-hidden transition-all">
-        <li *ngFor="let submenu1 of menu.submenu">
-            <button *ngIf="
-            submenu1.authCode === undefined ||
-            authCode.includes(submenu1.authCode)
-          " (click)="onMenuclick(submenu1, menu.name, submenu1.name, '')"
-                class="flex items-center px-3 h-12 w-full text-white hover:bg-[#65748B]/30 active:bg-[#65748B]/40"
-                [ngClass]="{ 'bg-[#65748B]/40': submenu1.name === selectedSubmenu1 }">
-                <p class="ml-9">{{ submenu1.name }}</p>
+    <ul *ngIf="menu.type === 'submenu'" [ngClass]="{ 'max-h-0': !menu.openSubmenu, 'max-h-96': menu.openSubmenu }"
+      class="overflow-hidden transition-all duration-200 mt-1 space-y-1">
+      <li *ngFor="let submenu1 of menu.submenu">
+        <button *ngIf="submenu1.authCode === undefined || authCode.includes(submenu1.authCode)"
+          (click)="onMenuclick(submenu1, menu.name, submenu1.name, '')"
+          class="flex items-center gap-2 rounded-lg pl-9 pr-3 h-10 w-full text-left text-sm transition-colors hover:bg-white/10 text-neutral-content/90"
+          [ngClass]="{ 'bg-white/10 text-neutral-content': submenu1.name === selectedSubmenu1 }">
+          <span class="flex-1">{{ submenu1.name }}</span>
+          <svg *ngIf="submenu1.type === 'submenu'" xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 transition-transform" [class.rotate-90]="submenu1.openSubmenu"
+            viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
 
-                <svg *ngIf="submenu1.type === 'submenu'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-auto"
-                    viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd" />
-                </svg>
+        <ul *ngIf="submenu1.type === 'submenu'" [ngClass]="{ 'max-h-0': !submenu1.openSubmenu, 'max-h-96': submenu1.openSubmenu }"
+          class="overflow-hidden transition-all duration-200 space-y-1">
+          <li *ngFor="let submenu2 of submenu1.submenu">
+            <button *ngIf="submenu2.authCode === undefined || authCode.includes(submenu2.authCode)"
+              (click)="onMenuclick(submenu2, menu.name, submenu1.name, submenu2.name)"
+              class="flex rounded-lg pl-12 pr-3 h-9 w-full text-left text-sm transition-colors hover:bg-white/10 text-neutral-content/80"
+              [ngClass]="{ 'bg-white/10 text-neutral-content': submenu2.name === selectedSubmenu2 }">
+              {{ submenu2.name }}
             </button>
-
-            <ul *ngIf="submenu1.type === 'submenu'" [ngClass]="{ 'h-0': !submenu1.openSubmenu }"
-                class="w-full overflow-hidden transition-all">
-                <li *ngFor="let submenu2 of submenu1.submenu">
-                    <button *ngIf="
-                submenu2.authCode === undefined ||
-                authCode.includes(submenu2.authCode)
-              " (click)="
-                onMenuclick(submenu2, menu.name, submenu1.name, submenu2.name)
-              " class="text-left px-3 h-12 w-full text-white hover:bg-[#151F2E]/20 active:bg-[#151F2E]/30" [ngClass]="{
-                'bg-[#151F2E]/30': submenu2.name === selectedSubmenu2
-              }">
-                        <p class="ml-12">{{ submenu2.name }}</p>
-                    </button>
-                </li>
-            </ul>
-        </li>
+          </li>
+        </ul>
+      </li>
     </ul>
-</div>
+  </div>
+</nav>

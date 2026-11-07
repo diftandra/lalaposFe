@@ -1,109 +1,79 @@
-<div class="px-8 pb-10">
-    <p class=" text-[#0D5CAB] font-bold text-2xl">Daftar Merk</p>
-    <br>
-    <div class="flex justify-between">
-        <form action="" [formGroup]=" formGroup" class="relative ">
-
-            <mat-form-field appearance="outline" class="">
-                <mat-label>Search</mat-label>
-                <mat-select formControlName="search">
-                    <mat-option *ngFor="let data of listSearch" [value]="data.value"
-                        (click)="changeSelectedSearch(data.value)"> {{data.key}}</mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class=" p-2">
-                <mat-label>Isi Di sini</mat-label>
-                <input matInput formControlName="value" (keyup)="strSearch($event)">
-
-            </mat-form-field>
-
-            <button class=" bg-blue-300 text-xl p-4 absolute top-3 rounded text-white font-bold">
-                <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M8 0.5C12.1421 0.5 15.5 3.85786 15.5 8C15.5 9.71015 14.9276 11.2866 13.964 12.5483L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3466 19.0676 17.7794 19.0953 17.3871 18.7903L17.2929 18.7071L12.5483 13.964C11.2866 14.9276 9.71015 15.5 8 15.5C3.85786 15.5 0.5 12.1421 0.5 8C0.5 3.85786 3.85786 0.5 8 0.5ZM8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5Z"
-                        fill="white" />
-                </svg>
-
-            </button>
-
-        </form>
-        <button (click)="tambah()" [ngClass]="{'bg-blue-300':true}"
-            class=" w-60 bg-blue-300 text-xl  h-12 rounded text-white font-bold">Tambah Merk</button>
+<div class="px-4 sm:px-8 pb-10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <h1 class="text-2xl font-bold text-base-content">Daftar Merk</h1>
+        <button (click)="tambah()" class="btn btn-primary gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Tambah Merk
+        </button>
     </div>
 
+    <div class="card bg-base-100 shadow-md">
+        <div class="card-body p-4 sm:p-5">
+            <form [formGroup]="formGroup" class="flex flex-wrap items-center gap-3 mb-2">
+                <mat-form-field appearance="outline" class="w-40">
+                    <mat-label>Cari berdasarkan</mat-label>
+                    <mat-select formControlName="search">
+                        <mat-option *ngFor="let data of listSearch" [value]="data.value"
+                            (click)="changeSelectedSearch(data.value)">{{ data.key }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
+                    <mat-label>Kata kunci</mat-label>
+                    <input matInput formControlName="value" (keyup)="strSearch($event)" placeholder="Ketik untuk mencari...">
+                </mat-form-field>
+            </form>
 
-    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
-        <ng-container matColumnDef="brandCode">
-            <th *matHeaderCellDef mat-sort-header class="rounded-l-md">
-                Kode Merk
-            </th>
-            <td mat-cell *matCellDef="let element">
-                {{ element.brandCode }}
-            </td>
-        </ng-container>
+            <div class="overflow-x-auto">
+                <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows class="w-full">
+                    <ng-container matColumnDef="brandCode">
+                        <th *matHeaderCellDef mat-sort-header>Kode Merk</th>
+                        <td mat-cell *matCellDef="let element">{{ element.brandCode }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="brandName">
+                        <th *matHeaderCellDef mat-sort-header>Nama Merk</th>
+                        <td mat-cell *matCellDef="let element">{{ element.brandName }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="created_date">
+                        <th *matHeaderCellDef mat-sort-header>Tanggal Dibuat</th>
+                        <td mat-cell *matCellDef="let element">{{ element.created_date }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="isActive">
+                        <th *matHeaderCellDef mat-sort-header>Status</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span *ngIf="element.isActive" class="badge badge-success badge-outline gap-1">Aktif</span>
+                            <span *ngIf="!element.isActive" class="badge badge-ghost gap-1">Nonaktif</span>
+                        </td>
+                    </ng-container>
 
-        <ng-container matColumnDef="brandName">
-            <th *matHeaderCellDef mat-sort-header>Nama Merk</th>
-            <td mat-cell *matCellDef="let element">
-                {{ element.brandName }}
-            </td>
-        </ng-container>
+                    <ng-container matColumnDef="actn">
+                        <th *matHeaderCellDef></th>
+                        <td id="editC" mat-cell *matCellDef="let element">
+                            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Aksi">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="18" r="2" transform="rotate(-180 12 18)" fill="#C4C4C4" />
+                                    <circle cx="12" cy="12" r="2" transform="rotate(-180 12 12)" fill="#C4C4C4" />
+                                    <circle cx="12" cy="6" r="2" transform="rotate(-180 12 6)" fill="#C4C4C4" />
+                                </svg>
+                            </button>
+                            <mat-menu #menu="matMenu">
+                                <button mat-menu-item (click)="edit(element.brandCode)"><span>Edit</span></button>
+                                <button mat-menu-item (click)="delete(element.brandCode)"><span>Hapus</span></button>
+                            </mat-menu>
+                        </td>
+                    </ng-container>
 
-        <ng-container matColumnDef="created_date">
-            <th *matHeaderCellDef mat-sort-header>Tanggal Pembuatan Merk</th>
-            <td mat-cell *matCellDef="let element">{{
-                element.created_date
-                }}</td>
-        </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-base-200 h-12"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:bg-base-200/60 cursor-pointer transition-colors"></tr>
+                </table>
 
-        <ng-container matColumnDef="isActive">
-            <th *matHeaderCellDef mat-sort-header>Status</th>
-            <td mat-cell *matCellDef="let element">
-                <img *ngIf="element.isActive" class="h-8 w-8" src="assets/Icon/centang.svg" alt="">
-                <img *ngIf="!element.isActive" class="h-6 w-6" src="assets/Icon/cross.svg" alt="">
-                <!-- {{ element.isActive
-                }} -->
-            </td>
-        </ng-container>
+                <div *ngIf="dataSource.filteredData.length == 0" class="text-center py-8 text-base-content/50">
+                    Data tidak ditemukan
+                </div>
+            </div>
 
-
-
-        <ng-container matColumnDef="actn">
-            <th *matHeaderCellDef mat-sort-header></th>
-            <td id="editC" mat-cell *matCellDef="let element">
-                <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="18" r="2" transform="rotate(-180 12 18)" fill="#C4C4C4" />
-                        <circle cx="12" cy="12" r="2" transform="rotate(-180 12 12)" fill="#C4C4C4" />
-                        <circle cx="12" cy="6" r="2" transform="rotate(-180 12 6)" fill="#C4C4C4" />
-                    </svg>
-                </button>
-                <mat-menu #menu="matMenu">
-                    <button mat-menu-item class="hover:font-bold" (click)="edit(element.brandCode)">
-                        <span>Edit</span>
-                    </button>
-                    <button mat-menu-item class="hover:font-bold" (click)="delete(element.brandCode)">
-                        <span>Delete</span>
-                    </button>
-                </mat-menu>
-            </td>
-        </ng-container>
-
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-[#F0EFEF] border-b-0 h-14"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:cursor-pointer hover:bg-[#F4F9FF]">
-        </tr>
-    </table>
-
-    <table>
-        <tr *ngIf="dataSource.filteredData.length == 0">
-            <td class="text-center py-4" [attr.colspan]="displayedColumns.length">
-                Data Tidak Ditemukan
-            </td>
-        </tr>
-    </table>
-
-    <mat-paginator [pageSizeOptions]="[10,25,50, 100, ]" showFirstLastButtons
-        aria-label="Select page of periodic elements">
-    </mat-paginator>
+            <mat-paginator [pageSizeOptions]="[10,25,50,100]" showFirstLastButtons aria-label="Pilih halaman"></mat-paginator>
+        </div>
+    </div>
 </div>

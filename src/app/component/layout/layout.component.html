@@ -1,23 +1,52 @@
-<nav *ngIf="isLoggedIn"
-    class="fixed top-0 left-0 w-screen h-[4.5rem] px-6 bg bg-gradient-to-r from-blue-500 to-blue-400 z-20 flex items-center">
-    <app-sidenav class="w-12 h-12 mr-10"></app-sidenav>
-
-    <a class="text-white mr-auto" href="home">
-
-    </a>
-
-    <div class="text-center" title>
-        <span class="font-normal text-lg text-white">Hello, </span>
-        <span class="font-semibold text-lg text-white">{{username}}</span>
-        <br />
-        <button class="font-semibold text-lg text-white" (click)="logout()">logout</button>
+<div [attr.data-theme]="isLoggedIn ? 'lalapos' : null">
+  <nav *ngIf="isLoggedIn"
+    class="navbar fixed top-0 left-0 w-full h-[4.5rem] px-4 sm:px-6 bg-gradient-to-r from-primary to-secondary text-primary-content z-20 shadow-md">
+    <div class="flex-none">
+      <app-sidenav class="w-12 h-12"></app-sidenav>
     </div>
-</nav>
 
-<div class="">
+    <div class="flex-1 flex items-center gap-2 ml-2">
+      <a href="home" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-white/95 grid place-items-center text-primary font-extrabold">L</div>
+        <span class="font-bold text-lg hidden sm:inline">Lala PoS</span>
+      </a>
+    </div>
+
+    <div class="flex-none">
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost normal-case gap-2 hover:bg-white/15">
+          <div class="avatar placeholder">
+            <div class="bg-white/20 text-primary-content rounded-full w-8">
+              <span class="text-sm">{{ (username || '?').charAt(0).toUpperCase() }}</span>
+            </div>
+          </div>
+          <span class="hidden sm:flex flex-col items-start leading-tight">
+            <span class="text-xs font-normal opacity-90">Hello,</span>
+            <span class="text-sm font-semibold">{{ username }}</span>
+          </span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu menu-sm mt-3 z-30 p-2 shadow bg-base-100 text-base-content rounded-box w-48">
+          <li class="menu-title"><span>{{ username }}</span></li>
+          <li><a (click)="logout()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="min-h-screen" [class.bg-base-200]="isLoggedIn">
     <app-breadcrumb></app-breadcrumb>
     <router-outlet></router-outlet>
-</div>
-<div class="fixed text-[#979797] text-[0.5rem] bottom-0 right-9">
+  </div>
+
+  <div class="fixed text-base-content/40 text-[0.6rem] bottom-1 right-3 z-10">
     {{ version }}
+  </div>
 </div>
