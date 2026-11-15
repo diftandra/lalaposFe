@@ -57,14 +57,6 @@ docker build -f Dockerfile.local -t lalapos-fe .
 docker run -p 8080:8080 lalapos-fe
 ```
 
-Jika PC berada di belakang proxy perusahaan, berikan proxy lewat build-arg:
-```bash
-docker build -f Dockerfile.local \
-  --build-arg HTTP_PROXY=http://your-proxy:8080 \
-  --build-arg HTTPS_PROXY=http://your-proxy:8080 \
-  -t lalapos-fe .
-```
-
 ## Konfigurasi alamat backend
 
 - `src/environments/environment.ts` — dipakai saat `npm start` (development)
