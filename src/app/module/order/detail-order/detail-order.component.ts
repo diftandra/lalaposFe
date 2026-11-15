@@ -16,6 +16,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DialogComponent } from 'src/app/component/dialog/dialog.component';
 import { DialogPaymentComponent } from 'src/app/component/dialog-payment/dialog-payment.component';
 import { MatSort } from '@angular/material/sort';
+import { QzTrayService, SalesReceipt } from 'src/app/services/qz-tray.service';
 
 @Component({
   selector: 'app-detail-order',
@@ -70,7 +71,7 @@ export class DetailOrderComponent implements OnInit {
   inputMerk = new Subject();
   inputDesc = new Subject();
 
-  constructor(private datePipe: DatePipe, private restS: RestService, private matDialog: MatDialog, private router: Router, private activeRouter: ActivatedRoute) {
+  constructor(private datePipe: DatePipe, private restS: RestService, private matDialog: MatDialog, private router: Router, private activeRouter: ActivatedRoute, private qzTray: QzTrayService) {
     this.getMaterBrand();
     this.inputMerk.pipe(debounceTime(700), distinctUntilChanged())
       .subscribe((res: any) => {
@@ -380,13 +381,23 @@ export class DetailOrderComponent implements OnInit {
           order.change = dp.kembalian;
           order.payment = dp.pembayaran;
 
-          this.restS.postAddOrder(JSON.stringify(order)).subscribe(event => {
+          this.restS.postAddOrder(JSON.stringify(order)).subscribe(async event => {
             if (event.type == HttpEventType.Response && event.ok && event.body) {
+              // Backend returns the generated invoice code in output_schema (may be empty on older backends)
+              const salesHeaderCode = Object(event.body)['output_schema'];
+              let question = "Berhasil menambahkan Order";
+              try {
+                await this.printReceipt(order, typeof salesHeaderCode == 'string' ? salesHeaderCode : undefined);
+              } catch (printError: any) {
+                console.error('Print error:', printError);
+                question += "\n\nPrint gagal: " + (printError?.message || printError)
+                  + "\nStruk bisa dicetak ulang dari Daftar Order.";
+              }
               const dialog = this.matDialog.open(DialogComponent,
                 {
                   width: '33%',
                   data: {
-                    question: "Berhasil menambahkan Order",
+                    question: question,
                     yesStr: "Ok",
 
                   },
@@ -404,6 +415,27 @@ export class DetailOrderComponent implements OnInit {
           this.disabelBtn = false
       })
     }
+  }
+
+  private async printReceipt(order: OrderBePost, salesHeaderCode?: string) {
+    const receipt: SalesReceipt = {
+      salesHeaderCode: salesHeaderCode,
+      customerName: order.customerName,
+      orderDate: this.datePipe.transform(new Date(), 'dd MMM yyyy HH:mm:ss') || '',
+      items: this.dataTable.map(item => ({
+        name: `${item.merkName || ''} ${item.productDesc || item.product_desc || ''}`.trim(),
+        qty: Number(item.product_amount),
+        unit: item.unit_amount || '',
+        price: Number(item.product_sell_price),
+        discount: Number(item.discount || 0),
+        total: Number(item.sub_total)
+      })),
+      grandTotal: order.grandTotal,
+      payment: order.payment || 0,
+      change: order.change || 0
+    };
+    const printerName = await this.qzTray.resolvePrinter();
+    await this.qzTray.printSalesReceipt(printerName, receipt);
   }
 
   getGrandTotal() {

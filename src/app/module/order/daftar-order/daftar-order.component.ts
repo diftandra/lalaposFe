@@ -14,6 +14,8 @@ import { DialogComponent } from 'src/app/component/dialog/dialog.component';
 import { pairValue } from 'src/app/model/general';
 import { Order, OrderBePost, OrderGetAll } from 'src/app/model/order';
 import { RestService } from 'src/app/service/rest/rest.service';
+import { stockD } from 'src/app/model/stock';
+import { QzTrayService, SalesReceipt } from 'src/app/services/qz-tray.service';
 
 @Component({
   selector: 'app-daftar-order',
@@ -66,7 +68,13 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
   sortE: Sort | undefined;
   total: number = 0;
 
-  constructor(private rest: RestService, private router: Router, private matDialog: MatDialog, private datePipe: DatePipe) {
+  constructor(
+    private rest: RestService, 
+    private router: Router, 
+    private matDialog: MatDialog, 
+    private datePipe: DatePipe,
+    private qzTray: QzTrayService
+  ) {
 
   }
   ngAfterViewInit(): void {
@@ -183,14 +191,7 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
   }
 
   print(data: OrderGetAll) {
-    let order: OrderBePost = {
-      salesHeaderCode: data.salesHeaderCode,
-      customerName: data.customerName,
-      orderDate: this.datePipe.transform(data.orderDate, 'yyyy-MM-dd')!,
-      orderDetail: [],
-      grandTotal: data.grandTotal
-    }
-
+    // Open payment dialog first
     const dialogPayment = this.matDialog.open(DialogPaymentComponent, {
       width: '33%',
       data: {
@@ -199,34 +200,105 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
     });
 
     dialogPayment.afterClosed().subscribe(dp => {
-      if (dp.pembayaran != undefined && dp.kembalian != undefined) {
-        console.log(dp)
-        order.change = dp.kembalian;
-        order.payment = dp.pembayaran;
+      if (!(dp && dp.pembayaran != undefined && dp.kembalian != undefined)) {
+        return;
+      }
 
-        this.rest.postPrintOrder(JSON.stringify(order)).subscribe(event => {
-          if (event.type == HttpEventType.Response && event.ok && event.body) {
-            const dialog = this.matDialog.open(DialogComponent,
-              {
-                width: '33%',
-                data: {
-                  question: "Berhasil Print Order",
-                  yesStr: "Ok",
+      // rest.get() emits every HttpEvent (Sent, Response, ...). Only use the final Response.
+      this.rest.getSalesDetail(data.salesHeaderCode).subscribe(event => {
+        if (event.type != HttpEventType.Response) {
+          return;
+        }
+        const details: stockD[] = (event.ok && Object(event.body)['output_schema']) || [];
 
-                },
-              }
-            );
-            dialog.afterClosed().subscribe(event => {
+        const receipt: SalesReceipt = {
+          salesHeaderCode: data.salesHeaderCode,
+          customerName: data.customerName,
+          orderDate: this.datePipe.transform(data.orderDate, 'dd MMM yyyy HH:mm:ss') || '',
+          items: details.map(d => ({
+            name: `${d.brand_name || ''} ${d.product_desc || ''}`.trim(),
+            qty: Number(d.product_amount),
+            unit: d.unit_amount,
+            price: Number(d.product_sell_price),
+            discount: Number(d.discount),
+            total: Number(d.total)
+          })),
+          grandTotal: data.grandTotal,
+          payment: dp.pembayaran,
+          change: dp.kembalian
+        };
+        this.printWithQz(receipt, data, dp.pembayaran, dp.kembalian);
+      }, error => {
+        console.error('Failed to get order details:', error);
+        alert('Gagal mengambil detail order. Gunakan print backend.');
+        this.printViaBackend(data, dp.pembayaran, dp.kembalian);
+      });
+    });
+  }
 
-            })
+  private async printWithQz(receipt: SalesReceipt, data: OrderGetAll, payment: number, change: number) {
+    try {
+      const printerName = await this.qzTray.resolvePrinter();
+      await this.qzTray.printSalesReceipt(printerName, receipt);
 
-          }
-        }, error => {
+      const dialog = this.matDialog.open(DialogComponent, {
+        width: '33%',
+        data: {
+          question: "Berhasil Print Order",
+          yesStr: "Ok",
+        },
+      });
+      dialog.afterClosed().subscribe(() => {
+        this.getData();
+      });
+    } catch (printError: any) {
+      console.error('Print error:', printError);
 
-        })
-      } else
-        undefined
-      // this.disabelBtn = false
-    })
+      // Show error and offer fallback
+      const errorDialog = this.matDialog.open(DialogComponent, {
+        width: '33%',
+        data: {
+          question: "Print gagal: " + (printError?.message || printError) + "\n\nGunakan print dari backend?",
+          yesStr: "Ya",
+          noStr: "Tidak"
+        },
+      });
+      errorDialog.afterClosed().subscribe((useBackend) => {
+        if (useBackend) {
+          this.printViaBackend(data, payment, change);
+        }
+      });
+    }
+  }
+
+  // Fallback method using backend print
+  private printViaBackend(data: OrderGetAll, payment: number, change: number) {
+    let order: OrderBePost = {
+      salesHeaderCode: data.salesHeaderCode,
+      customerName: data.customerName,
+      orderDate: this.datePipe.transform(data.orderDate, 'yyyy-MM-dd')!,
+      orderDetail: [],
+      grandTotal: data.grandTotal,
+      change: change,
+      payment: payment
+    };
+
+    this.rest.postPrintOrder(JSON.stringify(order)).subscribe(event => {
+      if (event.type == HttpEventType.Response && event.ok && event.body) {
+        const dialog = this.matDialog.open(DialogComponent, {
+          width: '33%',
+          data: {
+            question: "Berhasil Print Order (via Backend)",
+            yesStr: "Ok",
+          },
+        });
+
+        dialog.afterClosed().subscribe(() => {
+          this.getData();
+        });
+      }
+    }, error => {
+      alert('Print gagal: ' + (error.message || 'Unknown error'));
+    });
   }
 }
