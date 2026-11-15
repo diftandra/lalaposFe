@@ -79,7 +79,7 @@ export class DetailOrderComponent implements OnInit {
           this.formGroup.get('product_desc')?.reset();
           this.formGroup.get('product_desc')?.setValue(undefined);
           this.filterProduct = [];
-          this.getProductByBrand(this.listBrand.find(f => f.brandName.toLowerCase() == merk.toLowerCase())?.brandCode!)
+          this.getProductByBrand(this.listBrand.find(f => (f.brandName ?? '').toLowerCase() == (merk ?? '').toString().toLowerCase())?.brandCode!)
         }
       })
   }
@@ -109,13 +109,13 @@ export class DetailOrderComponent implements OnInit {
   }
 
   private _filterBrand(value: string): Brand[] {
-    const filterValue = value.toLowerCase();
-    return this.listBrand.filter(option => option.brandName.toLowerCase().includes(filterValue));
+    const filterValue = (value ?? '').toString().toLowerCase();
+    return this.listBrand.filter(option => (option.brandName ?? '').toLowerCase().includes(filterValue));
   }
   private _filterProduct(value: string): StockBeGet[] {
     console.log(1)
-    const filterValue = value.toLowerCase();    
-    return JSON.parse(JSON.stringify(this.listProduct.filter(option => option.productDesc.toLowerCase().includes(filterValue)))) ;
+    const filterValue = (value ?? '').toString().toLowerCase();
+    return JSON.parse(JSON.stringify(this.listProduct.filter(option => (option.productDesc ?? '').toLowerCase().includes(filterValue)))) ;
   }
   getdataEdit(id: string, pid: string) {
     this.restS.getSalesHeader(id).subscribe(event => {

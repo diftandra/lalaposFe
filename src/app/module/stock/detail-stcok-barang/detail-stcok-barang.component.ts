@@ -65,7 +65,7 @@ export class DetailStcokBarangComponent {
       .subscribe((res: any) => {
         let merk: string = (<HTMLInputElement>res.target).value;
         if (merk.length > 1) {
-          this.getProductByBrand(this.listBrand.find(f => f.brandName.toLowerCase() == merk.toLowerCase())?.brandCode!)
+          this.getProductByBrand(this.listBrand.find(f => (f.brandName ?? '').toLowerCase() == (merk ?? '').toString().toLowerCase())?.brandCode!)
         }
       })
 
@@ -120,12 +120,12 @@ export class DetailStcokBarangComponent {
     return this.listSupplier.find(f => f.supplierCode == code);
   }
   private _filterBrand(value: string): Brand[] {
-    const filterValue = value.toLowerCase();
-    return this.listBrand.filter(option => option.brandName.toLowerCase().includes(filterValue));
+    const filterValue = (value ?? '').toString().toLowerCase();
+    return this.listBrand.filter(option => (option.brandName ?? '').toLowerCase().includes(filterValue));
   }
   private _filterProduct(value: string): StockBeGet[] {
-    const filterValue = value.toLowerCase();
-    return this.listProduct.filter(option => option.productDesc.toLowerCase().includes(filterValue));
+    const filterValue = (value ?? '').toString().toLowerCase();
+    return this.listProduct.filter(option => (option.productDesc ?? '').toLowerCase().includes(filterValue));
   }
   setUnit(value: string, idx: number) {
     if (idx == 0)
