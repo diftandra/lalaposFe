@@ -50,12 +50,19 @@ npm run build
 
 Hasil build ada di `dist/lala-pos/`.
 
-## Menjalankan via Docker (opsional)
+## Menjalankan via Docker
+
+Frontend dijalankan bersama backend lewat `docker-compose.yml` di repo
+`lalapos-be` (lihat `lalapos-be/WINDOWS_SETUP.md`). Compose memakai `Dockerfile`,
+yang menyalin hasil build, jadi build dulu:
 
 ```bash
-docker build -f Dockerfile.local -t lalapos-fe .
-docker run -p 8080:8080 lalapos-fe
+npm ci
+npm run build -- --configuration production
 ```
+
+nginx (port 4200) meneruskan `/lala-pos/` ke service `backend`, jadi container
+ini tidak bisa dijalankan sendirian dengan `docker run`.
 
 ## Konfigurasi alamat backend
 
