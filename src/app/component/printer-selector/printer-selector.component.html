@@ -1,0 +1,61 @@
+<div class="printer-selector-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Pengaturan Printer</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Memuat daftar printer...</p>
+      </div>
+
+      <div *ngIf="!loading && !isQzActive" class="warning">
+        <mat-icon color="warn">warning</mat-icon>
+        <p>QZ Tray tidak aktif. Silakan install dan jalankan QZ Tray terlebih dahulu.</p>
+        <button mat-raised-button color="primary" (click)="refreshPrinters()">
+          <mat-icon>refresh</mat-icon>
+          Coba Lagi
+        </button>
+      </div>
+
+      <div *ngIf="!loading && isQzActive && printers.length === 0" class="warning">
+        <mat-icon color="warn">print_disabled</mat-icon>
+        <p>Tidak ada printer yang terdeteksi. Pastikan printer sudah terinstall dan menyala.</p>
+        <button mat-raised-button (click)="refreshPrinters()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+
+      <div *ngIf="!loading && isQzActive && printers.length > 0" class="printer-form">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Pilih Printer</mat-label>
+          <mat-select [(ngModel)]="selectedPrinter" (selectionChange)="savePrinter()">
+            <mat-option *ngFor="let printer of printers" [value]="printer">
+              {{ printer }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Printer yang dipilih akan digunakan untuk semua transaksi</mat-hint>
+        </mat-form-field>
+
+        <div class="actions">
+          <button mat-raised-button color="primary" (click)="testPrint()" [disabled]="!selectedPrinter">
+            <mat-icon>print</mat-icon>
+            Test Print
+          </button>
+          
+          <button mat-raised-button (click)="refreshPrinters()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+
+        <div class="info" *ngIf="selectedPrinter">
+          <mat-icon>info</mat-icon>
+          <p>Printer aktif: <strong>{{ selectedPrinter }}</strong></p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
