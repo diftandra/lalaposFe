@@ -1,11 +1,15 @@
+# Keep the build context small; dependencies and the build run inside Docker.
 .git
 .firebase
 .editorconfig
+.vscode
 node_modules
+dist
+.angular
 /e2e
 /docs
 .gitignore
 *.zip
+*.7z
 *.md
-.angular
-Dockerfile.local
+Dockerfile*

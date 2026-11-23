@@ -53,13 +53,8 @@ Hasil build ada di `dist/lala-pos/`.
 ## Menjalankan via Docker
 
 Frontend dijalankan bersama backend lewat `docker-compose.yml` di repo
-`lalapos-be` (lihat `lalapos-be/WINDOWS_SETUP.md`). Compose memakai `Dockerfile`,
-yang menyalin hasil build, jadi build dulu:
-
-```bash
-npm ci
-npm run build -- --configuration production
-```
+`lalapos-be` (lihat `lalapos-be/WINDOWS_SETUP.md`). `Dockerfile` mem-build
+aplikasi di dalam image (Node 16), jadi tidak perlu `npm run build` dulu.
 
 nginx (port 4200) meneruskan `/lala-pos/` ke service `backend`, jadi container
 ini tidak bisa dijalankan sendirian dengan `docker run`.
