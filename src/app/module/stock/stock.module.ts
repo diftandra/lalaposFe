@@ -7,6 +7,7 @@ import { SharedModuleModule } from '../shared-module/shared-module.module';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { DetailStcokBarangComponent } from './detail-stcok-barang/detail-stcok-barang.component';
 import { UploadCsvComponent } from './upload-csv/upload-csv.component';
+import { LabelPrintDialogComponent } from './label-print-dialog/label-print-dialog.component';
 import { AuthGuardService } from 'src/app/service/auth-guard/auth-guard.service';
 
 const routes: Routes = [
@@ -37,7 +38,8 @@ const routes: Routes = [
   declarations: [
     DaftarStcokBarangComponent,
     DetailStcokBarangComponent,
-    UploadCsvComponent
+    UploadCsvComponent,
+    LabelPrintDialogComponent
   ],
   imports: [
     CommonModule,

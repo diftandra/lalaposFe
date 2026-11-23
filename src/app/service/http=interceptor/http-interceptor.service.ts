@@ -36,6 +36,14 @@ export class HttpInterceptorService implements HttpInterceptor {
       }
 
       // Only surface non-auth errors, and read the message defensively.
+      // Validation errors (HTTP 400) carry a readable Indonesian message in
+      // output_schema, e.g. a duplicate barcode; show that text as-is.
+      const validation = error.status === 400 && error.error && typeof error.error.output_schema === 'string'
+        ? error.error.output_schema : '';
+      if (validation) {
+        alert(validation);
+        return throwError(error);
+      }
       const path = (error.error && error.error.path) ? error.error.path : req.url;
       const message = (error.error && error.error.error) ? error.error.error : error.message;
       alert(path + ' : ' + message);

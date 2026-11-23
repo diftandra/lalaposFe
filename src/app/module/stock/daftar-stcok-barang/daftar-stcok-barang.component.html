@@ -12,7 +12,8 @@
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
                     <mat-label>Kata kunci</mat-label>
-                    <input matInput formControlName="value" (input)="inputSearch.next($event)" placeholder="Ketik untuk mencari...">
+                    <input matInput formControlName="value" (input)="inputSearch.next($event)" (keydown.enter)="searchEnter($event)"
+                        [placeholder]="formGroup.get('search')?.value == 'barcode' ? 'Scan barcode...' : 'Ketik untuk mencari...'">
                 </mat-form-field>
                 <button type="button" class="btn btn-primary btn-square mb-5" (click)="search(undefined)" aria-label="Cari">
                     <svg width="18" height="18" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,6 +72,7 @@
                             </button>
                             <mat-menu #menu="matMenu">
                                 <button mat-menu-item (click)="edit(element.productCode)"><span>Edit</span></button>
+                                <button mat-menu-item (click)="printLabel(element)"><span>Cetak Label</span></button>
                                 <button mat-menu-item (click)="delete(element.productCode)"><span>Hapus</span></button>
                             </mat-menu>
                         </td>

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -17,13 +17,14 @@ import { DialogComponent } from 'src/app/component/dialog/dialog.component';
 import { DialogPaymentComponent } from 'src/app/component/dialog-payment/dialog-payment.component';
 import { MatSort } from '@angular/material/sort';
 import { QzTrayService, SalesReceipt } from 'src/app/services/qz-tray.service';
+import { BarcodeService } from 'src/app/services/barcode.service';
 
 @Component({
   selector: 'app-detail-order',
   templateUrl: './detail-order.component.html',
   styleUrls: ['./detail-order.component.css']
 })
-export class DetailOrderComponent implements OnInit {
+export class DetailOrderComponent implements OnInit, AfterViewInit {
 
   displayedColumns = ['idx', 'product_brand_code', 'product_code', 'product_desc', 'product_qty', 'unit_amount', 'discount', 'sub_total', 'actn']
   dataTable: Order[] = [];
@@ -70,8 +71,17 @@ export class DetailOrderComponent implements OnInit {
   id: string = '';
   inputMerk = new Subject();
   inputDesc = new Subject();
-
-  constructor(private datePipe: DatePipe, private restS: RestService, private matDialog: MatDialog, private router: Router, private activeRouter: ActivatedRoute, private qzTray: QzTrayService) {
+  // Barcode scanner (HPRT N130 in USB keyboard mode types the code + Enter).
+  // Kept outside formGroup so it never affects the form's validity.
+  scanCode = new FormControl('');
+  scanMessage: { type: 'success' | 'warning' | 'error', text: string } | undefined;
+  lastScanned: Order | undefined;
+  @ViewChild('scanInput') scanInput: ElementRef<HTMLInputElement> | undefined;
+  @ViewChild('customerInput') customerInput: ElementRef<HTMLInputElement> | undefined;
+  // Scans are processed one after another so two quick scans of the same
+  // item both count and never create two cart lines.
+  private scanQueue: Promise<void> = Promise.resolve();
+  constructor(private datePipe: DatePipe, private restS: RestService, private matDialog: MatDialog, private router: Router, private activeRouter: ActivatedRoute, private qzTray: QzTrayService, private barcode: BarcodeService) {
     this.getMaterBrand();
     this.inputMerk.pipe(debounceTime(700), distinctUntilChanged())
       .subscribe((res: any) => {
@@ -109,6 +119,123 @@ export class DetailOrderComponent implements OnInit {
     
   }
 
+  ngAfterViewInit(): void {
+    setTimeout(() => this.focusScan());
+  }
+  focusScan() {
+    if (!this.id) {
+      this.scanInput?.nativeElement.focus();
+    }
+  }
+  /** Enter in Nama Pembeli jumps to the scan field so the next scan lands there. */
+  customerEnter(event: Event) {
+    event.preventDefault();
+    this.focusScan();
+  }
+  onScan(event?: Event) {
+    event?.preventDefault();
+    const code = this.barcode.normalize(this.scanCode.value);
+    this.scanCode.setValue('');
+    if (!code) {
+      return;
+    }
+    this.scanQueue = this.scanQueue.then(() => this.addScanned(code)).catch(() => undefined);
+  }
+  private scanFeedback(type: 'success' | 'warning' | 'error', text: string) {
+    this.scanMessage = { type, text };
+    this.barcode.beep(type != 'error');
+  }
+  private lookupBarcode(code: string): Promise<StockBeGet | null> {
+    return new Promise((resolve, reject) => {
+      this.restS.getProductByBarcode(code).subscribe(event => {
+        if (event.type == HttpEventType.Response) {
+          resolve(event.ok && event.body ? Object(event.body)['output_schema'] : null);
+        }
+      }, error => reject(error));
+    });
+  }
+  /** Adds one unit of the scanned product/packing to the cart (or +1 when already there). */
+  private async addScanned(code: string) {
+    const customer = this.formGroup.get('customer_name')?.value;
+    if (!customer || !customer.toString().trim()) {
+      this.scanFeedback('error', 'Isi Nama Pembeli dulu, lalu scan lagi.');
+      this.customerInput?.nativeElement.focus();
+      return;
+    }
+    this.loadingDetail = true;
+    let p: StockBeGet | null;
+    try {
+      p = await this.lookupBarcode(code);
+    } catch (e) {
+      this.scanFeedback('error', 'Gagal mencari barcode ' + code + '. Cek koneksi ke server.');
+      return;
+    } finally {
+      this.loadingDetail = false;
+      this.focusScan();
+    }
+    if (!p) {
+      this.scanFeedback('error', 'Barcode ' + code + ' tidak dikenal. Daftarkan dulu di Input Stok.');
+      return;
+    }
+    const level = p.matchedLevel || 1;
+    const suffix = level == 1 ? '' : level.toString();
+    const pa: any = p;
+    const packing: string = pa['packing' + suffix];
+    const packingCode: string = pa['packingCode' + level];
+    const price = Number(pa['sellPrice' + suffix] || 0);
+    const stock = Number(pa['stock' + suffix] || 0);
+    const line = this.dataTable.find(f => f.product_code == p!.productCode && f.product_unit == packingCode);
+    const inCart = line ? Number(line.product_amount) : 0;
+    const name = ((p.productBrand || '') + ' ' + (p.productDesc || '')).trim();
+    if (stock - inCart < 1) {
+      this.scanFeedback('error', 'Stok ' + name + ' (' + packing + ') tidak cukup. Sisa ' + Math.max(0, stock - inCart) + '.');
+      return;
+    }
+    if (line) {
+      line.product_amount = inCart + 1;
+      line.sub_total = Number(line.product_sell_price) * line.product_amount - Number(line.discount || 0);
+      this.lastScanned = line;
+    } else {
+      const temp: any = {
+        customer_name: customer,
+        product_code: p.productCode,
+        product_brand_code: p.productBrandCode,
+        product_desc: p.productDesc,
+        product_entry_date: this.formGroup.get('product_entry_date')?.value || new Date(),
+        product_amount: 1,
+        product_qty: stock - 1,
+        product_unit: packingCode,
+        discount: 0,
+        unit_amount: packing,
+        merkName: p.productBrand,
+        productDesc: p.productDesc,
+        product_sell_price: price,
+        sub_total: price,
+        salesDetailCode: undefined,
+        idx: this.dataTable.length + 1,
+      };
+      this.dataTable.push(temp);
+      this.lastScanned = temp;
+    }
+    this.formGroup.get('customer_name')?.disable();
+    this.refreshTable();
+    const amount = Number(this.lastScanned?.product_amount);
+    const left = stock - amount;
+    if (left <= 0) {
+      this.scanFeedback('warning', name + ' (' + packing + ') x' + amount + '. Stok habis setelah order ini.');
+    } else {
+      this.scanFeedback('success', name + ' (' + packing + ') x' + amount + ' · Rp ' + price.toLocaleString('id-ID') + ' · sisa stok ' + left);
+    }
+  }
+  /** Line numbers 1..n after a line is removed. */
+  private renumber() {
+    this.dataTable.forEach((row, i) => row.idx = i + 1);
+  }
+  private refreshTable() {
+    this.dataSource = new MatTableDataSource(this.dataTable);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
   private _filterBrand(value: string): Brand[] {
     const filterValue = (value ?? '').toString().toLowerCase();
     return this.listBrand.filter(option => (option.brandName ?? '').toLowerCase().includes(filterValue));
@@ -286,8 +413,9 @@ export class DetailOrderComponent implements OnInit {
     temp['salesDetailCode'] = this.formGroup.get('salesDetailCode')?.value
     temp.idx = this.dataTable.length + 1;
     try {
-      if( this.dataTable.find(f => f.product_code ==  temp['product_code']) && this.dataTable.find(f => f.product_unit ==  temp['product_unit']) )  {
-        let data = this.dataTable.find(f => f.product_code ==  temp['product_code']) && this.dataTable.find(f => f.product_unit ==  temp['product_unit']);
+      // Same product AND same packing on one line (the old check could match two different lines).
+      let data = this.dataTable.find(f => f.product_code == temp['product_code'] && f.product_unit == temp['product_unit']);
+      if (data) {
         data!.product_amount = Number.parseInt(data!.product_amount +'') +  Number.parseInt(temp['product_amount'] +'');
         data!.discount = Number.parseInt(data!.discount +'') +  Number.parseInt(temp['discount'] +'');
         data!.sub_total = Number.parseInt(data!.sub_total +'') +  Number.parseInt(temp['sub_total'] +'');
@@ -309,17 +437,18 @@ export class DetailOrderComponent implements OnInit {
     this.formGroup.get('product_amount')?.disable();
     this.listProduct = [];
     this.listUnit = [];
+    this.focusScan();
   }
-  edit(id: string) {
-    let data: any = this.dataTable.find(f => f.product_code == id);
+  edit(row: Order) {
+    // By row identity: one product can be on several lines (one per packing).
+    let data: any = row;
     this.listForm.forEach(element => {
       this.formGroup.get(element)?.setValue(data[element]);
     });
     this.formGroup.get('merkName')?.setValue(data['merkName'])
     this.formGroup.get('harga_satuan')?.setValue(data['product_sell_price'])
     this.formGroup.get('salesDetailCode')?.setValue(data['salesDetailCode'])
-    let idx = this.dataTable.findIndex(f => f.product_code == id);
-
+    let idx = this.dataTable.indexOf(row);
     this.restS.getProductByBrand(data['product_brand_code']).subscribe(event => {
       if (event.type == HttpEventType.Response && event.body && event.ok) {
         this.listProduct = Object(event.body)['output_schema'];
@@ -329,13 +458,18 @@ export class DetailOrderComponent implements OnInit {
       }
     })
     this.dataTable.splice(idx, 1);
+    this.renumber();
     this.formGroup.get('product_amount')?.enable();
     this.dataSource = new MatTableDataSource(this.dataTable);
     this.dataSource.paginator = this.paginator
   }
-  delete(id: string) {
-    let idx = this.dataTable.findIndex(f => f.product_code == id);
+  delete(row: Order) {
+    let idx = this.dataTable.indexOf(row);
+    if (idx < 0) {
+      return;
+    }
     this.dataTable.splice(idx, 1);
+    this.renumber();
     this.dataSource = new MatTableDataSource(this.dataTable);
     this.dataSource.paginator = this.paginator
   }

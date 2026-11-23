@@ -3,6 +3,23 @@
     <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,28%),minmax(0,72%)] gap-5">
 
         <div class="card bg-base-100 shadow-md"><div class="card-body p-5">
+            <div *ngIf="!uploadCsv" class="mb-4">
+                <label for="scan-stock" class="text-sm font-semibold">Scan Barcode</label>
+                <div class="flex items-center gap-2 mt-1">
+                    <input id="scan-stock" #scanInput type="text" autocomplete="off" spellcheck="false"
+                        [formControl]="scanCode" (keydown.enter)="onScan($event)"
+                        class="input input-bordered input-primary w-full font-mono"
+                        placeholder="Arahkan scanner ke barcode...">
+                    <span *ngIf="scanLoading" class="loading loading-spinner loading-sm text-primary"></span>
+                </div>
+                <p class="text-xs text-base-content/60 mt-1">
+                    {{ id ? 'Barcode baru dipasang ke packing yang belum punya barcode.' : 'Barcode terdaftar membuka produknya. Barcode baru dipasang ke packing.' }}
+                </p>
+                <div *ngIf="scanMessage" role="status" class="alert py-2 mt-2 text-sm"
+                    [ngClass]="{'alert-success': scanMessage.type == 'success', 'alert-info': scanMessage.type == 'info', 'alert-error': scanMessage.type == 'error'}">
+                    <span>{{ scanMessage.text }}</span>
+                </div>
+            </div>
             <form action="" [formGroup]="formGroup">
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Merek</mat-label>
@@ -59,6 +76,24 @@
                         <mat-label>Sell Price*</mat-label>
                         <input matInput type="text" [(ngModel)]="detail.sellPrice" currencyMask>
                     </mat-form-field>
+                    <div class="col-span-4 flex items-start gap-2 -mt-3 mb-3 w-[97%]">
+                        <div class="flex-1">
+                            <input type="text" autocomplete="off" spellcheck="false" [maxlength]="barcodeMaxLength"
+                                [(ngModel)]="detail.barcode" (ngModelChange)="rowBarcodeChanged()"
+                                (keydown.enter)="rowBarcodeEnter($event, idx)"
+                                [attr.aria-label]="'Barcode ' + (detail.packing || 'packing ' + (idx + 1))"
+                                [ngClass]="{'input-error': isDuplicateBarcode(idx)}"
+                                class="input input-bordered input-sm w-full font-mono"
+                                [placeholder]="'Barcode ' + (detail.packing || 'packing ' + (idx + 1)) + ' (opsional)'">
+                            <p *ngIf="isDuplicateBarcode(idx)" class="text-xs text-error mt-1">Barcode sama dengan packing lain.</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline" *ngIf="!detail.barcode"
+                            [disabled]="generatingIdx != undefined" (click)="generateBarcode(idx)"
+                            title="Buat barcode internal untuk barang tanpa barcode pabrik">
+                            <span *ngIf="generatingIdx == idx" class="loading loading-spinner loading-xs"></span>
+                            Generate
+                        </button>
+                    </div>
                 </div>
             </div>
             <form action="" [formGroup]="formGroup">
@@ -93,7 +128,7 @@
                 </mat-form-field>
             </form>
 
-            <button *ngIf="btnSimpan()" [disabled]="!formGroup.valid"
+            <button *ngIf="btnSimpan()" [disabled]="!formGroup.valid || hasDuplicateBarcode()"
                 class="btn btn-primary w-full mt-2" (click)="simpan()">Simpan</button>
         </div></div>
 

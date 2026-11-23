@@ -13,6 +13,8 @@ import { pairValue } from 'src/app/model/general';
 import { Order } from 'src/app/model/order';
 import { Stock, StockBeGet } from 'src/app/model/stock';
 import { RestService } from 'src/app/service/rest/rest.service';
+import { BarcodeLabel, BarcodeService } from 'src/app/services/barcode.service';
+import { LabelPrintDialogComponent } from '../label-print-dialog/label-print-dialog.component';
 
 @Component({
   selector: 'app-daftar-stcok-barang',
@@ -47,6 +49,10 @@ export class DaftarStcokBarangComponent implements OnInit, AfterViewInit {
       key: 'Product Desc',
       value: 'productDesc'
     },
+    {
+      key: 'Barcode (scan)',
+      value: 'barcode'
+    },
   ]
   mappingSearh: pairValue[] = [
     {
@@ -76,7 +82,7 @@ export class DaftarStcokBarangComponent implements OnInit, AfterViewInit {
   ]
   inputSearch = new Subject();
 
-  constructor(private rest: RestService, private router: Router, private matDialog: MatDialog) {
+  constructor(private rest: RestService, private router: Router, private matDialog: MatDialog, private barcode: BarcodeService) {
 
   }
   ngAfterViewInit(): void {
@@ -91,6 +97,10 @@ export class DaftarStcokBarangComponent implements OnInit, AfterViewInit {
       this.search(actv)
     });
     this.inputSearch.pipe(debounceTime(700), distinctUntilChanged()).subscribe(event => {
+      // Barcode search runs on Enter (the scanner sends it), not while typing.
+      if (this.formGroup.get('search')?.value == 'barcode') {
+        return;
+      }
       this.search(undefined)
     })
   }
@@ -101,6 +111,9 @@ export class DaftarStcokBarangComponent implements OnInit, AfterViewInit {
         break;
       case 'productBrand':
         this.getData(undefined, this.formGroup.get('value')?.value,undefined,this.pageE?.pageIndex, this.pageE?.pageSize, this.sortE?.direction, actv ? actv : this.sortE?.active);
+        break;
+      case 'barcode':
+        this.searchBarcode(this.formGroup.get('value')?.value);
         break;
       case 'productDesc':
         this.getData(undefined, undefined, this.formGroup.get('value')?.value,this.pageE?.pageIndex, this.pageE?.pageSize, this.sortE?.direction, actv ? actv : this.sortE?.active);
@@ -125,6 +138,42 @@ export class DaftarStcokBarangComponent implements OnInit, AfterViewInit {
 
       }
     })
+  }
+  /** Scan (or type) a barcode to show only its product. */
+  searchBarcode(raw: string) {
+    const code = this.barcode.normalize(raw);
+    if (!code) {
+      this.getData();
+      return;
+    }
+    this.rest.getProductByBarcode(code).subscribe(event => {
+      if (event.type == HttpEventType.Response && event.ok && event.body) {
+        const p: StockBeGet | null = Object(event.body)['output_schema'];
+        // The list shows the brand name in productBrandCode; match that here.
+        this.dataTable = p ? [{ ...p, productBrandCode: p.productBrand || p.productBrandCode }] : [];
+        this.length = this.dataTable.length;
+        this.dataSource = new MatTableDataSource(this.dataTable);
+        this.barcode.beep(!!p);
+      }
+    });
+  }
+  /** Enter in the keyword field (scanner suffix) searches right away. */
+  searchEnter(event: Event) {
+    event.preventDefault();
+    this.search(undefined);
+  }
+  printLabel(row: StockBeGet) {
+    const name = ((row.productBrandCode || '') + ' ' + (row.productDesc || '')).trim();
+    const levels: [string | undefined, number | undefined, string | null | undefined][] = [
+      [row.packing, row.sellPrice, row.barcode],
+      [row.packing2, row.sellPrice2, row.barcode2],
+      [row.packing3, row.sellPrice3, row.barcode3],
+      [row.packing4, row.sellPrice4, row.barcode4],
+    ];
+    const labels: BarcodeLabel[] = levels
+      .filter(l => l[0] && l[2])
+      .map(l => ({ name, packing: l[0] || '', price: Number(l[1] || 0), barcode: l[2] || '', copies: 1 }));
+    this.matDialog.open(LabelPrintDialogComponent, { width: '640px', data: { labels } });
   }
   edit(id: string) {
     console.log(id)

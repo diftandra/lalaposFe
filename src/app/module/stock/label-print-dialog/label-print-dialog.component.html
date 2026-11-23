@@ -1,0 +1,56 @@
+<div class="p-1">
+    <h2 class="text-xl font-bold mb-3">Cetak Label Barcode</h2>
+
+    <div *ngIf="rows.length == 0" class="alert alert-warning text-sm">
+        <span>Produk ini belum punya barcode. Isi atau klik Generate di halaman Edit Stok, lalu simpan.</span>
+    </div>
+
+    <div *ngIf="rows.length > 0">
+        <div class="overflow-x-auto">
+            <table class="table table-compact w-full">
+                <thead>
+                    <tr><th></th><th>Produk</th><th>Packing</th><th class="text-right">Harga</th><th>Barcode</th><th>Jumlah</th></tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let r of rows">
+                        <td><input type="checkbox" class="checkbox checkbox-sm checkbox-primary" [(ngModel)]="r.selected"
+                                (ngModelChange)="refreshPreview()" [attr.aria-label]="'Pilih ' + r.packing"></td>
+                        <td class="whitespace-normal">{{ r.name }}</td>
+                        <td>{{ r.packing }}</td>
+                        <td class="text-right">Rp {{ r.price | number }}</td>
+                        <td class="font-mono text-xs">{{ r.barcode }}</td>
+                        <td><input type="number" min="0" max="500" class="input input-bordered input-sm w-20"
+                                [(ngModel)]="r.copies" [attr.aria-label]="'Jumlah label ' + r.packing"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-4 mt-4">
+            <label class="form-control">
+                <span class="label-text text-sm mb-1 block">Ukuran kertas label</span>
+                <select class="select select-bordered select-sm" [ngModel]="size.key" (ngModelChange)="setSize($event)">
+                    <option *ngFor="let s of sizes" [value]="s.key">{{ s.label }}</option>
+                </select>
+            </label>
+            <div>
+                <span class="text-sm block mb-1">Contoh</span>
+                <div class="inline-block border border-base-300 shadow-sm" [innerHTML]="preview"></div>
+            </div>
+        </div>
+
+        <p class="text-xs text-base-content/60 mt-3">
+            Label dicetak lewat dialog print browser. Pilih printer label dan ukuran kertas yang sama di dialog itu,
+            margin "None", skala 100%.
+        </p>
+        <div *ngIf="popupBlocked" class="alert alert-error text-sm mt-2">
+            <span>Jendela print diblokir browser. Izinkan pop-up untuk alamat ini, lalu klik Cetak lagi.</span>
+        </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-5">
+        <button type="button" class="btn btn-ghost" (click)="close()">Tutup</button>
+        <button type="button" class="btn btn-primary" *ngIf="rows.length > 0" [disabled]="totalLabels == 0"
+            (click)="print()">Cetak {{ totalLabels }} Label</button>
+    </div>
+</div>

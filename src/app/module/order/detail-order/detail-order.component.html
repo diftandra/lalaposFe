@@ -3,6 +3,22 @@
     <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,28%),minmax(0,72%)] gap-5">
 
         <div class="card bg-base-100 shadow-md"><div class="card-body p-5">
+            <div *ngIf="!id" class="mb-4">
+                <label for="scan-order" class="text-sm font-semibold">Scan Barcode</label>
+                <div class="flex items-center gap-2 mt-1">
+                    <input id="scan-order" #scanInput type="text" autocomplete="off" spellcheck="false"
+                        [formControl]="scanCode" (keydown.enter)="onScan($event)"
+                        class="input input-bordered input-primary w-full font-mono"
+                        placeholder="Arahkan scanner ke barcode...">
+                    <span *ngIf="loadingDetail" class="loading loading-spinner loading-sm text-primary"></span>
+                </div>
+                <p class="text-xs text-base-content/60 mt-1">Setiap scan menambah 1 barang ke bon. Scan lagi untuk menambah jumlah.</p>
+                <div *ngIf="scanMessage" role="status" class="alert py-2 mt-2 text-sm"
+                    [ngClass]="{'alert-success': scanMessage.type == 'success', 'alert-warning': scanMessage.type == 'warning', 'alert-error': scanMessage.type == 'error'}">
+                    <span>{{ scanMessage.text }}</span>
+                </div>
+                <div class="divider text-xs text-base-content/50 my-2">atau input manual</div>
+            </div>
             <form action="" [formGroup]="formGroup">
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Tanggal Jam</mat-label>
@@ -10,7 +26,7 @@
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Nama Pembeli</mat-label>
-                    <input matInput formControlName="customer_name">
+                    <input matInput formControlName="customer_name" #customerInput (keydown.enter)="customerEnter($event)">
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-[90%]">
                     <mat-label>Kode Produk</mat-label>
@@ -159,10 +175,10 @@
                             </svg>
                         </button>
                         <mat-menu #menu="matMenu">
-                            <button mat-menu-item class="hover:font-bold" (click)="edit(element.product_code)">
+                            <button mat-menu-item class="hover:font-bold" (click)="edit(element)">
                                 <span>Edit</span>
                             </button>
-                            <button mat-menu-item class="hover:font-bold" (click)="delete(element.product_code)">
+                            <button mat-menu-item class="hover:font-bold" (click)="delete(element)">
                                 <span>Delete</span>
                             </button>
                         </mat-menu>
@@ -172,6 +188,7 @@
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-base-200 h-12"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns"
+                    [ngClass]="{'bg-success/10': row === lastScanned}"
                     class="hover:bg-base-200/60 cursor-pointer transition-colors"></tr>
             </table>
 

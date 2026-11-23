@@ -95,6 +95,17 @@ export class RestService {
     let url = this.url + '/lala-pos/input-product/get-product-by-brand/' + brand;
     return this.get(url);
   }
+  /** Product for a scanned barcode; output_schema is null when the code is unknown. */
+  getProductByBarcode(code: string) {
+    let url = this.url + '/lala-pos/input-product/product-by-barcode';
+    // Query parameter, not a path segment: Code128 barcodes may contain '/'.
+    return this.get(url, new HttpParams().append('code', code));
+  }
+  /** New internal EAN-13 barcode (prefix 200) for goods without a manufacturer barcode. */
+  generateBarcode() {
+    let url = this.url + '/lala-pos/input-product/generate-barcode';
+    return this.post(url, undefined, '{}');
+  }
   delStock(id: string) {
     let url = this.url + '/lala-pos/input-product/delete-product/' + id;
     return this.del(url, undefined);

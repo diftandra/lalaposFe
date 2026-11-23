@@ -20,7 +20,8 @@ export type StockDetail = {
     packingCode?: string,
     totalPerPacking?: number,
     stock?: number,
-    sellPrice?: number
+    sellPrice?: number,
+    barcode?: string | null
 }
 export type StockBeGet = {
     productId: string,
@@ -48,6 +49,12 @@ export type StockBeGet = {
     totalPerPacking4: number,
     stock4: number,
     sellPrice4: number,
+    barcode?: string | null,
+    barcode2?: string | null,
+    barcode3?: string | null,
+    barcode4?: string | null,
+    /** Packing level (1..4) that matched a scanned barcode; only set by product-by-barcode. */
+    matchedLevel?: number,
     basePrice: number,
     minStock: number,
     packingMinStock: number,
@@ -78,6 +85,11 @@ export type StockBePost = {
     totalPerPacking4?: number,
     stock4?: number,
     sellPrice4?: number,
+    /** null/absent keeps the stored barcode, '' clears it. */
+    barcode?: string | null,
+    barcode2?: string | null,
+    barcode3?: string | null,
+    barcode4?: string | null,
     basePrice?: number,
     minStock?: number,
     supplier: string,
