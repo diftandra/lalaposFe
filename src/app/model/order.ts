@@ -17,6 +17,7 @@ export type Order = {
     unit_amount?: string
     productDesc?: string
     salesDetailCode?: string
+    max_stock?: number
 }
 
 export type OrderBePost = {

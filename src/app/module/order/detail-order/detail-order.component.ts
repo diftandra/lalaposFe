@@ -133,13 +133,34 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     this.focusScan();
   }
   onScan(event?: Event) {
-    event?.preventDefault();
-    const code = this.barcode.normalize(this.scanCode.value);
-    this.scanCode.setValue('');
-    if (!code) {
+    if (event instanceof KeyboardEvent && event.isComposing) {
       return;
     }
-    this.scanQueue = this.scanQueue.then(() => this.addScanned(code)).catch(() => undefined);
+    event?.preventDefault();
+    const raw = this.barcode.normalize(this.scanCode.value);
+    if (!raw) {
+      this.scanCode.setValue('');
+      return;
+    }
+    // Optional multiplier prefix: e.g. "12*2000000000183" adds +12 in one scan.
+    let qty = 1;
+    let code = raw;
+    const multMatch = raw.match(/^(\d+)\*(.*)$/);
+    if (multMatch) {
+      qty = parseInt(multMatch[1], 10);
+      code = this.barcode.normalize(multMatch[2]);
+      if (!code) {
+        this.scanFeedback('warning', 'Jumlah x' + qty + ' siap. Arahkan scanner ke barcode barang.');
+        return;
+      }
+      if (!Number.isFinite(qty) || qty < 1) {
+        this.scanCode.setValue('');
+        this.scanFeedback('error', 'Jumlah scan minimal 1.');
+        return;
+      }
+    }
+    this.scanCode.setValue('');
+    this.scanQueue = this.scanQueue.then(() => this.addScanned(code, qty)).catch(() => undefined);
   }
   private scanFeedback(type: 'success' | 'warning' | 'error', text: string) {
     this.scanMessage = { type, text };
@@ -154,8 +175,8 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
       }, error => reject(error));
     });
   }
-  /** Adds one unit of the scanned product/packing to the cart (or +1 when already there). */
-  private async addScanned(code: string) {
+  /** Adds qty units of the scanned product/packing to the cart (or +qty when already there). */
+  private async addScanned(code: string, qty: number = 1) {
     const customer = this.formGroup.get('customer_name')?.value;
     if (!customer || !customer.toString().trim()) {
       this.scanFeedback('error', 'Isi Nama Pembeli dulu, lalu scan lagi.');
@@ -187,12 +208,14 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     const line = this.dataTable.find(f => f.product_code == p!.productCode && f.product_unit == packingCode);
     const inCart = line ? Number(line.product_amount) : 0;
     const name = ((p.productBrand || '') + ' ' + (p.productDesc || '')).trim();
-    if (stock - inCart < 1) {
-      this.scanFeedback('error', 'Stok ' + name + ' (' + packing + ') tidak cukup. Sisa ' + Math.max(0, stock - inCart) + '.');
+    if (stock - inCart < qty) {
+      this.scanFeedback('error', 'Stok ' + name + ' (' + packing + ') tidak cukup. Sisa ' + Math.max(0, stock - inCart) + ' (diminta +' + qty + ').');
       return;
     }
     if (line) {
-      line.product_amount = inCart + 1;
+      line.product_amount = inCart + qty;
+      line.max_stock = stock;
+      line.product_qty = stock - line.product_amount;
       line.sub_total = Number(line.product_sell_price) * line.product_amount - Number(line.discount || 0);
       this.lastScanned = line;
     } else {
@@ -202,15 +225,16 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
         product_brand_code: p.productBrandCode,
         product_desc: p.productDesc,
         product_entry_date: this.formGroup.get('product_entry_date')?.value || new Date(),
-        product_amount: 1,
-        product_qty: stock - 1,
+        product_amount: qty,
+        product_qty: stock - qty,
+        max_stock: stock,
         product_unit: packingCode,
         discount: 0,
         unit_amount: packing,
         merkName: p.productBrand,
         productDesc: p.productDesc,
         product_sell_price: price,
-        sub_total: price,
+        sub_total: price * qty,
         salesDetailCode: undefined,
         idx: this.dataTable.length + 1,
       };
@@ -221,11 +245,70 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     this.refreshTable();
     const amount = Number(this.lastScanned?.product_amount);
     const left = stock - amount;
+    const addedLabel = qty > 1 ? ' (+' + qty + ' → x' + amount + ')' : ' x' + amount;
     if (left <= 0) {
-      this.scanFeedback('warning', name + ' (' + packing + ') x' + amount + '. Stok habis setelah order ini.');
+      this.scanFeedback('warning', name + ' (' + packing + ')' + addedLabel + '. Stok habis setelah order ini.');
     } else {
-      this.scanFeedback('success', name + ' (' + packing + ') x' + amount + ' · Rp ' + price.toLocaleString('id-ID') + ' · sisa stok ' + left);
+      this.scanFeedback('success', name + ' (' + packing + ')' + addedLabel + ' · Rp ' + price.toLocaleString('id-ID') + ' · sisa stok ' + left);
     }
+  }
+  /** Adjusts a cart row's quantity by delta (-1 / +1) with stock validation. */
+  stepQty(row: Order, delta: number) {
+    const current = Number(row.product_amount) || 0;
+    const next = current + delta;
+    this.applyRowQty(row, next, true);
+  }
+  /** Commits a typed quantity from the inline cart input. */
+  commitRowQty(row: Order, input: HTMLInputElement, refocusScan: boolean) {
+    const raw = (input.value ?? '').trim();
+    const parsed = /^\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+    const ok = this.applyRowQty(row, parsed, refocusScan);
+    if (!ok) {
+      input.value = String(row.product_amount);
+    }
+  }
+  onQtyEnter(event: Event, row: Order, input: HTMLInputElement) {
+    if (event instanceof KeyboardEvent && event.isComposing) {
+      return;
+    }
+    event.preventDefault();
+    this.commitRowQty(row, input, true);
+  }
+  private applyRowQty(row: Order, nextQty: number, refocusScan: boolean): boolean {
+    const name = ((row.merkName || '') + ' ' + (row.product_desc || '')).trim();
+    const packing = row.unit_amount || '';
+    if (!Number.isFinite(nextQty) || nextQty < 1) {
+      this.scanFeedback('error', 'Jumlah ' + name + ' minimal 1.');
+      return false;
+    }
+    if (row.max_stock != null && nextQty > row.max_stock) {
+      this.scanFeedback('error', 'Stok ' + name + ' (' + packing + ') tidak cukup. Tersedia ' + row.max_stock + '.');
+      return false;
+    }
+    if (nextQty === Number(row.product_amount)) {
+      if (refocusScan) {
+        this.focusScan();
+      }
+      return true;
+    }
+    row.product_amount = nextQty;
+    if (row.max_stock != null) {
+      row.product_qty = row.max_stock - nextQty;
+    }
+    row.sub_total = Number(row.product_sell_price) * nextQty - Number(row.discount || 0);
+    this.lastScanned = row;
+    if (row.max_stock != null) {
+      const left = row.max_stock - nextQty;
+      if (left <= 0) {
+        this.scanFeedback('warning', name + ' (' + packing + ') x' + nextQty + '. Stok habis setelah order ini.');
+      } else {
+        this.scanMessage = { type: 'success', text: name + ' (' + packing + ') x' + nextQty + ' · sisa stok ' + left };
+      }
+    }
+    if (refocusScan) {
+      this.focusScan();
+    }
+    return true;
   }
   /** Line numbers 1..n after a line is removed. */
   private renumber() {
@@ -405,7 +488,11 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     })
     
     
-    temp['unit_amount'] = this.listUnit.find(f => f.packingCode == this.formGroup.get('product_unit')?.value)?.packing;
+    const selectedUnit = this.listUnit.find(f => f.packingCode == this.formGroup.get('product_unit')?.value);
+    temp['unit_amount'] = selectedUnit?.packing;
+    if (selectedUnit?.stock != null) {
+      temp['max_stock'] = Number(selectedUnit.stock);
+    }
     temp['merkName'] = this.formGroup.get('merkName')?.value
     temp['productDesc'] = this.listProduct.find(f => f.productCode == this.formGroup.get('product_desc')?.value)?.productDesc;
     temp.product_sell_price = this.formGroup.get('harga_satuan')?.value
@@ -419,6 +506,9 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
         data!.product_amount = Number.parseInt(data!.product_amount +'') +  Number.parseInt(temp['product_amount'] +'');
         data!.discount = Number.parseInt(data!.discount +'') +  Number.parseInt(temp['discount'] +'');
         data!.sub_total = Number.parseInt(data!.sub_total +'') +  Number.parseInt(temp['sub_total'] +'');
+        if (temp['max_stock'] != null) {
+          data!.max_stock = temp['max_stock'];
+        }
       }else
       this.dataTable.push(temp);
     } catch (error) {
