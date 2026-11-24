@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { Menu, menuList, sessionStorage_menu_key, Submenu1, Submenu2 } from 'src/app/model/general';
 import { MenuBe } from 'src/app/model/profile';
 import { AuthService } from 'src/app/service/auth.service';
@@ -9,7 +10,7 @@ import { AuthService } from 'src/app/service/auth.service';
   templateUrl: './sidenav-menu.component.html',
   styleUrls: ['./sidenav-menu.component.css']
 })
-export class SidenavMenuComponent {
+export class SidenavMenuComponent implements OnDestroy {
   @Output('changePage') changePage: EventEmitter<string> =
     new EventEmitter<string>();
   menus: Menu[] = [];
@@ -17,20 +18,28 @@ export class SidenavMenuComponent {
   selectedSubmenu1: string = '';
   selectedSubmenu2: string = '';
   authCode: string[] = [];
-  menuList: Menu[] = menuList;
+  private loginSub: Subscription;
 
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private authS: AuthService
   ) {
-    this.menus = this.menuList;
-    authS.getLoggin.subscribe(event => {
+    this.loginSub = authS.getLoggin.subscribe(event => {
       if (event) {
-
-        this.chekMenu(this.menus, 0, authS.getMenu())
+        // Clone menuList fresh on every login so splicing never mutates the shared template
+        // (prevents empty menu on initial login or missing menus when switching users).
+        const freshMenus: Menu[] = JSON.parse(JSON.stringify(menuList));
+        this.chekMenu(freshMenus, 0, authS.getMenu());
+        this.menus = freshMenus;
+      } else {
+        this.menus = [];
       }
-    })
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.loginSub.unsubscribe();
   }
 
   getAuthMenu() {

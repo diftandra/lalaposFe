@@ -2,6 +2,7 @@ import { AfterViewInit, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { sessionStorage_username_key } from 'src/app/model/general';
 import { AuthService } from 'src/app/service/auth.service';
+import packageJson from '../../../../package.json';
 
 @Component({
   selector: 'app-layout',
@@ -10,7 +11,7 @@ import { AuthService } from 'src/app/service/auth.service';
 })
 export class LayoutComponent implements AfterViewInit {
 
-  version: string = "1.0.7"
+  readonly version: string = 'v' + packageJson.version;
   date = new Date();
   isLoggedIn: boolean = false;
   username = sessionStorage.getItem(sessionStorage_username_key);

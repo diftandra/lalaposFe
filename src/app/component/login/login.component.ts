@@ -81,9 +81,11 @@ export class LoginComponent {
 
           sessionStorage.setItem(sessionStorage_username_key, username);
           sessionStorage.setItem(sessionStorage_password_key, pass);
-          this.authS.isLoggin.next(true)
           let menu: string[] = data.map(m => crypto.AES.encrypt(m.menu_code, ENC_KEY).toString());
-          sessionStorage.setItem(sessionStorage_menu_key, menu.toString())
+          sessionStorage.setItem(sessionStorage_menu_key, menu.toString());
+          // Emit login state only after username, password, and menu are in sessionStorage
+          // so LayoutComponent / SidenavMenuComponent immediately read the populated menu.
+          this.authS.isLoggin.next(true);
 
           this.router.navigate(['home'])
         }
