@@ -1,6 +1,6 @@
 {
   "name": "lala-pos",
-  "version": "0.0.0",
+  "version": "3.1.0-dev",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 3000",

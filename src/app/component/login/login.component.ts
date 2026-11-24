@@ -8,6 +8,7 @@ import { AuthService } from 'src/app/service/auth.service';
 import { RestService } from 'src/app/service/rest/rest.service';
 import * as crypto from 'crypto-js';
 import { Login, MenuBe } from 'src/app/model/profile';
+import packageJson from '../../../../package.json';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +24,7 @@ export class LoginComponent {
   loading: boolean = false;
   showPassword: boolean = false;
   readonly year: number = new Date().getFullYear();
+  readonly version: string = packageJson.version;
 
   constructor(private router: Router, private authS: AuthService, private rest: RestService) { }
 
