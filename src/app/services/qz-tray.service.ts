@@ -20,6 +20,7 @@ export interface SalesReceipt {
   grandTotal: number;
   payment: number;
   change: number;
+  paymentMethod?: string;
 }
 
 @Injectable({
@@ -267,6 +268,7 @@ export class QzTrayService {
     c.push(separator);
     c.push(ESC + 'E' + '\x01');
     c.push(leftRight('TOTAL', fmt(receipt.grandTotal)));
+    c.push(leftRight('METODE', receipt.paymentMethod || 'TUNAI'));
     c.push(leftRight('PEMBAYARAN', fmt(receipt.payment)));
     c.push(leftRight('KEMBALIAN', fmt(receipt.change)));
     c.push(ESC + 'E' + '\x00');

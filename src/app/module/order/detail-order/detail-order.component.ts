@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -18,6 +18,17 @@ import { DialogPaymentComponent } from 'src/app/component/dialog-payment/dialog-
 import { MatSort } from '@angular/material/sort';
 import { QzTrayService, SalesReceipt } from 'src/app/services/qz-tray.service';
 import { BarcodeService } from 'src/app/services/barcode.service';
+
+const HELD_ORDERS_KEY = 'lalapos_held_orders_v1';
+const DEFAULT_CUSTOMER = 'Umum';
+
+export interface HeldOrder {
+  id: string;
+  customerName: string;
+  heldAt: string;
+  items: Order[];
+  grandTotal: number;
+}
 
 @Component({
   selector: 'app-detail-order',
@@ -45,7 +56,7 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
   ]
   formGroup = new FormGroup({
     merkName: new FormControl(''),
-    customer_name: new FormControl('', Validators.required),
+    customer_name: new FormControl(DEFAULT_CUSTOMER, Validators.required),
     product_code: new FormControl('', Validators.required),
     product_brand_code: new FormControl('', Validators.required),
     product_desc: new FormControl('', Validators.required),
@@ -76,6 +87,8 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
   scanCode = new FormControl('');
   scanMessage: { type: 'success' | 'warning' | 'error', text: string } | undefined;
   lastScanned: Order | undefined;
+  heldOrders: HeldOrder[] = [];
+  showHeldOrders: boolean = true;
   @ViewChild('scanInput') scanInput: ElementRef<HTMLInputElement> | undefined;
   @ViewChild('customerInput') customerInput: ElementRef<HTMLInputElement> | undefined;
   // Scans are processed one after another so two quick scans of the same
@@ -116,7 +129,29 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     this.formGroup.get('harga_satuan')?.disable();
     this.formGroup.get('product_qty')?.disable();
     this.formGroup.get('product_amount')?.disable();
+    this.heldOrders = this.loadHeldOrders();
     
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleShortcuts(event: KeyboardEvent) {
+    if (this.id || this.matDialog.openDialogs.length > 0) {
+      return;
+    }
+    if (event.key === 'F2') {
+      event.preventDefault();
+      this.focusScan();
+    } else if (event.key === 'F8') {
+      if (this.dataTable.length > 0) {
+        event.preventDefault();
+        this.holdOrder();
+      }
+    } else if (event.key === 'F9') {
+      if (this.dataTable.length > 0 && !this.disabelBtn) {
+        event.preventDefault();
+        this.kirim();
+      }
+    }
   }
 
   ngAfterViewInit(): void {
@@ -177,11 +212,10 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
   }
   /** Adds qty units of the scanned product/packing to the cart (or +qty when already there). */
   private async addScanned(code: string, qty: number = 1) {
-    const customer = this.formGroup.get('customer_name')?.value;
-    if (!customer || !customer.toString().trim()) {
-      this.scanFeedback('error', 'Isi Nama Pembeli dulu, lalu scan lagi.');
-      this.customerInput?.nativeElement.focus();
-      return;
+    const rawCustomer = this.formGroup.getRawValue().customer_name;
+    const customer = (rawCustomer && rawCustomer.toString().trim()) ? rawCustomer.toString().trim() : DEFAULT_CUSTOMER;
+    if (!rawCustomer || !rawCustomer.toString().trim()) {
+      this.formGroup.get('customer_name')?.setValue(customer);
     }
     this.loadingDetail = true;
     let p: StockBeGet | null;
@@ -241,7 +275,6 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
       this.dataTable.push(temp);
       this.lastScanned = temp;
     }
-    this.formGroup.get('customer_name')?.disable();
     this.refreshTable();
     const amount = Number(this.lastScanned?.product_amount);
     const left = stock - amount;
@@ -250,6 +283,83 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
       this.scanFeedback('warning', name + ' (' + packing + ')' + addedLabel + '. Stok habis setelah order ini.');
     } else {
       this.scanFeedback('success', name + ' (' + packing + ')' + addedLabel + ' · Rp ' + price.toLocaleString('id-ID') + ' · sisa stok ' + left);
+    }
+  }
+  /** Parks the current cart in localStorage so cashier can serve the next buyer. */
+  holdOrder() {
+    if (this.id || this.dataTable.length === 0) {
+      return;
+    }
+    const rawCustomer = this.formGroup.getRawValue().customer_name;
+    const customerName = (rawCustomer && rawCustomer.toString().trim()) ? rawCustomer.toString().trim() : DEFAULT_CUSTOMER;
+    const snapshot: HeldOrder = {
+      id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+      customerName,
+      heldAt: new Date().toISOString(),
+      items: this.dataTable.map(item => ({ ...item, customer_name: customerName })),
+      grandTotal: this.getGrandTotal()
+    };
+    this.heldOrders = [snapshot, ...this.heldOrders];
+    this.saveHeldOrders();
+    this.showHeldOrders = true;
+
+    this.dataTable = [];
+    this.lastScanned = undefined;
+    this.refreshTable();
+    this.formGroup.get('customer_name')?.enable();
+    this.formGroup.get('customer_name')?.setValue(DEFAULT_CUSTOMER);
+    this.scanFeedback('warning', 'Bon ' + customerName + ' ditahan. Siap melayani pembeli berikutnya.');
+    this.focusScan();
+  }
+  /** Restores a held cart. If current cart has items, parks it first so nothing is lost. */
+  resumeHeldOrder(held: HeldOrder) {
+    if (this.id) {
+      return;
+    }
+    const remaining = this.heldOrders.filter(h => h.id !== held.id);
+    if (this.dataTable.length > 0) {
+      const rawCustomer = this.formGroup.getRawValue().customer_name;
+      const currentName = (rawCustomer && rawCustomer.toString().trim()) ? rawCustomer.toString().trim() : DEFAULT_CUSTOMER;
+      remaining.unshift({
+        id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+        customerName: currentName,
+        heldAt: new Date().toISOString(),
+        items: this.dataTable.map(item => ({ ...item, customer_name: currentName })),
+        grandTotal: this.getGrandTotal()
+      });
+    }
+    this.heldOrders = remaining;
+    this.saveHeldOrders();
+
+    this.dataTable = held.items.map((item, idx) => ({ ...item, idx: idx + 1 }));
+    this.lastScanned = undefined;
+    this.formGroup.get('customer_name')?.enable();
+    this.formGroup.get('customer_name')?.setValue(held.customerName || DEFAULT_CUSTOMER);
+    this.refreshTable();
+    this.scanMessage = { type: 'success', text: 'Melanjutkan bon ' + held.customerName + ' (' + held.items.length + ' item).' };
+    this.focusScan();
+  }
+  removeHeldOrder(heldId: string) {
+    this.heldOrders = this.heldOrders.filter(h => h.id !== heldId);
+    this.saveHeldOrders();
+  }
+  private loadHeldOrders(): HeldOrder[] {
+    try {
+      const raw = localStorage.getItem(HELD_ORDERS_KEY);
+      if (!raw) {
+        return [];
+      }
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  private saveHeldOrders() {
+    try {
+      localStorage.setItem(HELD_ORDERS_KEY, JSON.stringify(this.heldOrders));
+    } catch {
+      // Ignore storage quota errors
     }
   }
   /** Adjusts a cart row's quantity by delta (-1 / +1) with stock validation. */
@@ -522,8 +632,7 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
     this.formGroup.reset();
 
     this.formGroup.get('product_entry_date')?.setValue(new Date());
-    this.formGroup.get('customer_name')?.setValue(temp.customer_name);
-    this.formGroup.get('customer_name')?.disable();
+    this.formGroup.get('customer_name')?.setValue(temp.customer_name || DEFAULT_CUSTOMER);
     this.formGroup.get('product_amount')?.disable();
     this.listProduct = [];
     this.listUnit = [];
@@ -581,9 +690,13 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
           unitForProductAmount: element.product_unit
         });
       });
+      const rawCustomer = this.formGroup.getRawValue().customer_name;
+      const customerName = (rawCustomer && rawCustomer.toString().trim())
+        ? rawCustomer.toString().trim()
+        : (this.dataTable[0].customer_name || DEFAULT_CUSTOMER);
       let order: OrderBePost = {
         salesHeaderCode: this.id ? this.id : '',
-        customerName: this.dataTable[0].customer_name,
+        customerName: customerName,
         orderDate: this.datePipe.transform(this.dataTable[0].product_entry_date, 'yyyy-MM-dd')!,
         orderDetail: detailOrder,
         grandTotal: detailOrder.map(m => m.total).reduce((accumulate: number, current: number) => {
@@ -594,7 +707,8 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
 
       this.disabelBtn = true;
       const dialogPayment = this.matDialog.open(DialogPaymentComponent, {
-        width: '33%',
+        width: '460px',
+        maxWidth: '95vw',
         data: {
           total: order.grandTotal
         },
@@ -604,6 +718,7 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
           console.log(dp)
           order.change = dp.kembalian;
           order.payment = dp.pembayaran;
+          order.paymentMethod = dp.paymentMethod || 'TUNAI';
 
           this.restS.postAddOrder(JSON.stringify(order)).subscribe(async event => {
             if (event.type == HttpEventType.Response && event.ok && event.body) {
@@ -656,7 +771,8 @@ export class DetailOrderComponent implements OnInit, AfterViewInit {
       })),
       grandTotal: order.grandTotal,
       payment: order.payment || 0,
-      change: order.change || 0
+      change: order.change || 0,
+      paymentMethod: order.paymentMethod || 'TUNAI'
     };
     const printerName = await this.qzTray.resolvePrinter();
     await this.qzTray.printSalesReceipt(printerName, receipt);

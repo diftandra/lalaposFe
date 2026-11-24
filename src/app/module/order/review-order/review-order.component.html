@@ -4,7 +4,7 @@
     <!-- order summary -->
     <div class="card bg-base-100 shadow-md mb-5">
         <div class="card-body p-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                     <p class="text-xs uppercase tracking-wide text-base-content/50">Order Id</p>
                     <p class="font-semibold text-base-content">{{ header.sales_header_code }}</p>
@@ -16,6 +16,15 @@
                 <div>
                     <p class="text-xs uppercase tracking-wide text-base-content/50">Tanggal Order</p>
                     <p class="font-semibold text-base-content">{{ header.order_date | date : 'dd MMM yyyy HH:mm' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wide text-base-content/50">Metode</p>
+                    <span class="badge badge-sm mt-1 font-medium"
+                        [ngClass]="{
+                            'badge-ghost': !header.payment_method || header.payment_method === 'TUNAI',
+                            'badge-info text-white': header.payment_method === 'QRIS',
+                            'badge-secondary text-white': header.payment_method === 'TRANSFER'
+                        }">{{ header.payment_method || 'TUNAI' }}</span>
                 </div>
                 <div>
                     <p class="text-xs uppercase tracking-wide text-base-content/50">Total</p>

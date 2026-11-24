@@ -1,32 +1,74 @@
-<div>
-    <form action="" [formGroup]="formGroup">
-        <div class="grid grid-cols-[30%,50%] justify-center">
-            <p class="self-center">Total Bon</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Total Bon</mat-label>
-                <input class="text-xl" matInput formControlName="totalBon" currencyMask>
-            </mat-form-field>
-            <p class="self-center">Pembayaran</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Pembayaran</mat-label>
-                <input class="font-bold" matInput formControlName="pembayaran" currencyMask>
-            </mat-form-field>
-            <p class="self-center">Kembalian</p>
-            <mat-form-field appearance="outline" class="w-[90%]">
-                <mat-label>Kembalian</mat-label>
-                <input class="text-xl" matInput formControlName="kembalian" currencyMask
-                    [options]="{allowNegative:true}">
-            </mat-form-field>
-        </div>
-        <div class="flex justify-between">
-            <button 
-                class=" bg-blue-200 text-xl  h-12 rounded text-white font-bold p-2 px-10"  (click)="onNoClick()"
-                >Kembali</button>
-            <button [disabled]="!formGroup.valid || this.formGroup.get('kembalian')?.value == undefined"
-                class=" bg-blue-300 text-xl  h-12 rounded text-white font-bold p-2 px-10"
-                (click)="cetak()">Cetak</button>
-                
-        </div>
+<div class="p-1">
+  <h2 class="text-xl font-bold text-base-content mb-4">Pembayaran</h2>
 
-    </form>
+  <form [formGroup]="formGroup" (ngSubmit)="cetak()" class="space-y-4">
+    <!-- Total summary -->
+    <div class="rounded-xl bg-base-200 px-4 py-3 flex items-baseline justify-between">
+      <span class="text-sm text-base-content/70">Total Bon</span>
+      <span class="text-2xl font-extrabold text-primary">Rp {{ total | number }}</span>
+    </div>
+
+    <!-- Payment method (accessible radio group styled as segmented pills) -->
+    <fieldset class="space-y-1.5">
+      <legend class="text-sm font-medium text-base-content/80">Metode Pembayaran</legend>
+      <div class="grid grid-cols-3 gap-2">
+        <label *ngFor="let m of methods"
+          class="btn btn-sm h-10 normal-case cursor-pointer"
+          [ngClass]="currentMethod === m.value ? 'btn-primary' : 'btn-outline border-base-300 text-base-content'">
+          <input type="radio" formControlName="paymentMethod" [value]="m.value" class="sr-only">
+          <span>{{ m.label }}</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- Paid amount -->
+    <div class="form-control">
+      <label for="payment-amount" class="label pb-1">
+        <span class="label-text font-medium">Jumlah Dibayar</span>
+      </label>
+      <input id="payment-amount" #payInput type="text" inputmode="numeric" autocomplete="off"
+        enterkeyhint="done" formControlName="pembayaran" currencyMask
+        [readonly]="currentMethod !== 'TUNAI'"
+        (focus)="payInput.select()"
+        class="input input-bordered input-primary w-full text-xl font-bold text-right"
+        placeholder="Rp 0">
+    </div>
+
+    <!-- Quick cash buttons (only for Tunai) -->
+    <div *ngIf="currentMethod === 'TUNAI'" class="flex flex-wrap gap-2">
+      <button type="button" class="btn btn-sm btn-outline btn-primary normal-case"
+        (click)="selectAmount(total)">
+        Uang Pas
+      </button>
+      <button *ngFor="let amt of quickAmounts" type="button"
+        class="btn btn-sm btn-ghost border border-base-300 font-mono"
+        (click)="selectAmount(amt)">
+        Rp {{ amt | number }}
+      </button>
+    </div>
+
+    <!-- Change / remaining status -->
+    <div role="status" aria-live="polite"
+      class="rounded-xl px-4 py-3 flex items-baseline justify-between border"
+      [ngClass]="{
+        'bg-success/10 border-success/30 text-success': changeValue !== null && changeValue >= 0,
+        'bg-error/10 border-error/30 text-error': changeValue !== null && changeValue < 0,
+        'bg-base-200 border-base-300 text-base-content/60': changeValue === null
+      }">
+      <span class="text-sm font-medium">
+        {{ changeValue !== null && changeValue < 0 ? 'Kurang Bayar' : 'Kembalian' }}
+      </span>
+      <span class="text-xl font-extrabold">
+        Rp {{ (changeValue !== null ? (changeValue < 0 ? -changeValue : changeValue) : 0) | number }}
+      </span>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="onNoClick()">Batal</button>
+      <button type="submit" [disabled]="!canSubmit" class="btn btn-primary px-6">
+        Bayar &amp; Cetak
+      </button>
+    </div>
+  </form>
 </div>

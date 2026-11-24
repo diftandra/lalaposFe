@@ -27,7 +27,8 @@ export type OrderBePost = {
     grandTotal: number,
     orderDetail: OrderDetailBe[],
     payment?: number,
-    change?: number
+    change?: number,
+    paymentMethod?: string
 }
 export type OrderDetailBe = {
     salesHeaderCode: string,
@@ -48,6 +49,7 @@ export type OrderGetAll = {
     customerName: string,
     orderDate: string | Date,
     grandTotal: number,
+    paymentMethod?: string,
     created_by: string,
     created_date: string | Date,
     updated_by: string,

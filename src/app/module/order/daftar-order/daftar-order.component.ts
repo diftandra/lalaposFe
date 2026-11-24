@@ -28,7 +28,7 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
   dataSource = new MatTableDataSource(this.dataTable);
   @ViewChild(MatPaginator) paginator: MatPaginator | any;
   @ViewChild(MatSort) sort: MatSort | any;
-  displayedColumns = ['salesHeaderCode', 'customerName', 'orderDate', 'grandTotal', 'actn']
+  displayedColumns = ['salesHeaderCode', 'customerName', 'orderDate', 'paymentMethod', 'grandTotal', 'actn']
   formGroup = new FormGroup({
     search: new FormControl(''),
     value: new FormControl(''),
@@ -193,9 +193,11 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
   print(data: OrderGetAll) {
     // Open payment dialog first
     const dialogPayment = this.matDialog.open(DialogPaymentComponent, {
-      width: '33%',
+      width: '460px',
+      maxWidth: '95vw',
       data: {
-        total: data.grandTotal
+        total: data.grandTotal,
+        paymentMethod: data.paymentMethod
       },
     });
 
@@ -225,18 +227,19 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
           })),
           grandTotal: data.grandTotal,
           payment: dp.pembayaran,
-          change: dp.kembalian
+          change: dp.kembalian,
+          paymentMethod: dp.paymentMethod || data.paymentMethod || 'TUNAI'
         };
-        this.printWithQz(receipt, data, dp.pembayaran, dp.kembalian);
+        this.printWithQz(receipt, data, dp.pembayaran, dp.kembalian, receipt.paymentMethod);
       }, error => {
         console.error('Failed to get order details:', error);
         alert('Gagal mengambil detail order. Gunakan print backend.');
-        this.printViaBackend(data, dp.pembayaran, dp.kembalian);
+        this.printViaBackend(data, dp.pembayaran, dp.kembalian, dp.paymentMethod);
       });
     });
   }
 
-  private async printWithQz(receipt: SalesReceipt, data: OrderGetAll, payment: number, change: number) {
+  private async printWithQz(receipt: SalesReceipt, data: OrderGetAll, payment: number, change: number, paymentMethod?: string) {
     try {
       const printerName = await this.qzTray.resolvePrinter();
       await this.qzTray.printSalesReceipt(printerName, receipt);
@@ -265,14 +268,14 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
       });
       errorDialog.afterClosed().subscribe((useBackend) => {
         if (useBackend) {
-          this.printViaBackend(data, payment, change);
+          this.printViaBackend(data, payment, change, paymentMethod);
         }
       });
     }
   }
 
   // Fallback method using backend print
-  private printViaBackend(data: OrderGetAll, payment: number, change: number) {
+  private printViaBackend(data: OrderGetAll, payment: number, change: number, paymentMethod?: string) {
     let order: OrderBePost = {
       salesHeaderCode: data.salesHeaderCode,
       customerName: data.customerName,
@@ -280,7 +283,8 @@ export class DaftarOrderComponent implements OnInit, AfterViewInit {
       orderDetail: [],
       grandTotal: data.grandTotal,
       change: change,
-      payment: payment
+      payment: payment,
+      paymentMethod: paymentMethod || data.paymentMethod || 'TUNAI'
     };
 
     this.rest.postPrintOrder(JSON.stringify(order)).subscribe(event => {

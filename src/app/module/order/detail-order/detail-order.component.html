@@ -4,7 +4,10 @@
 
         <div class="card bg-base-100 shadow-md"><div class="card-body p-5">
             <div *ngIf="!id" class="mb-4">
-                <label for="scan-order" class="text-sm font-semibold">Scan Barcode</label>
+                <div class="flex items-center justify-between">
+                    <label for="scan-order" class="text-sm font-semibold">Scan Barcode</label>
+                    <kbd class="kbd kbd-xs text-base-content/60">F2</kbd>
+                </div>
                 <div class="flex items-center gap-2 mt-1">
                     <input id="scan-order" #scanInput type="text" autocomplete="off" autocorrect="off"
                         autocapitalize="none" spellcheck="false" enterkeyhint="done"
@@ -102,6 +105,41 @@
 
         </div></div>
         <div class="card bg-base-100 shadow-md"><div class="card-body p-4 sm:p-5">
+            <!-- Held carts (Tahan Bon) -->
+            <div *ngIf="!id && heldOrders.length > 0" class="mb-4 rounded-xl border border-warning/40 bg-warning/10 p-3">
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" class="flex items-center gap-2 text-sm font-semibold text-base-content"
+                        (click)="showHeldOrders = !showHeldOrders"
+                        [attr.aria-expanded]="showHeldOrders">
+                        <span>Bon Ditahan</span>
+                        <span class="badge badge-warning badge-sm font-bold">{{ heldOrders.length }}</span>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-xs" (click)="showHeldOrders = !showHeldOrders">
+                        {{ showHeldOrders ? 'Sembunyikan' : 'Tampilkan' }}
+                    </button>
+                </div>
+                <div *ngIf="showHeldOrders" class="mt-2.5 flex flex-col gap-2">
+                    <div *ngFor="let h of heldOrders"
+                        class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-base-100 px-3 py-2 border border-base-200">
+                        <div class="text-sm">
+                            <span class="font-semibold">{{ h.customerName }}</span>
+                            <span class="text-xs text-base-content/60 ml-2">
+                                {{ h.items.length }} item &middot; Rp {{ h.grandTotal | number }} &middot; {{ h.heldAt | date : 'HH:mm' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" class="btn btn-xs btn-primary normal-case" (click)="resumeHeldOrder(h)">
+                                Lanjutkan
+                            </button>
+                            <button type="button" class="btn btn-xs btn-ghost text-error" (click)="removeHeldOrder(h.id)"
+                                [attr.aria-label]="'Hapus bon ditahan ' + h.customerName">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-end mb-2">
                 <span class="text-base-content/60 mr-2">Total Bon :</span>
                 <span class="text-2xl font-bold text-primary">Rp {{ getGrandTotal() | number }}</span>
@@ -221,9 +259,17 @@
             <mat-paginator [pageSizeOptions]="[10,25,50,100]" showFirstLastButtons
                 aria-label="Pilih halaman">
             </mat-paginator>
-            <div class="flex justify-end mt-4">
-                <button [disabled]="dataTable.length <= 0 || disabelBtn" (click)="kirim()"
-                    class="btn btn-primary px-10">Kirim</button>
+            <div class="flex flex-wrap items-center justify-end gap-3 mt-4">
+                <button *ngIf="!id" type="button" [disabled]="dataTable.length <= 0 || disabelBtn" (click)="holdOrder()"
+                    class="btn btn-outline btn-warning normal-case gap-2">
+                    <span>Tahan Bon</span>
+                    <kbd class="kbd kbd-xs">F8</kbd>
+                </button>
+                <button type="button" [disabled]="dataTable.length <= 0 || disabelBtn" (click)="kirim()"
+                    class="btn btn-primary px-8 normal-case gap-2">
+                    <span>{{ id ? 'Simpan' : 'Bayar & Kirim' }}</span>
+                    <kbd *ngIf="!id" class="kbd kbd-xs bg-primary-focus text-primary-content border-0">F9</kbd>
+                </button>
             </div>
         </div></div>
     </div>

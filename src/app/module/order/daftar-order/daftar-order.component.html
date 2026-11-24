@@ -38,6 +38,17 @@
                         <th *matHeaderCellDef mat-sort-header>Waktu Transaksi</th>
                         <td mat-cell *matCellDef="let element" (click)="reviewOrder(element.salesHeaderCode)">{{ element.orderDate | date :'dd MMM yyyy HH:mm' }}</td>
                     </ng-container>
+                    <ng-container matColumnDef="paymentMethod">
+                        <th *matHeaderCellDef>Metode</th>
+                        <td mat-cell *matCellDef="let element" (click)="reviewOrder(element.salesHeaderCode)">
+                            <span class="badge badge-sm font-medium"
+                                [ngClass]="{
+                                    'badge-ghost': !element.paymentMethod || element.paymentMethod === 'TUNAI',
+                                    'badge-info text-white': element.paymentMethod === 'QRIS',
+                                    'badge-secondary text-white': element.paymentMethod === 'TRANSFER'
+                                }">{{ element.paymentMethod || 'TUNAI' }}</span>
+                        </td>
+                    </ng-container>
                     <ng-container matColumnDef="packing">
                         <th *matHeaderCellDef mat-sort-header>Packing</th>
                         <td mat-cell *matCellDef="let element"></td>

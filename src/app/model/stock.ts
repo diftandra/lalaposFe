@@ -138,7 +138,8 @@ export type stockH = {
     sales_header_code: string,
     customer_name: string,
     order_date: string | Date,
-    total: number
+    total: number,
+    payment_method?: string
 }
 export const listHeader: pairValue[] =
     [{ key: 'string', value: "Brand" },
